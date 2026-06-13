@@ -41,8 +41,6 @@ export function useContractionStore() {
   const [activeStart, setActiveStart] = useState(null);
   const [elapsed, setElapsed] = useState(0);
   const [timeSinceLast, setTimeSinceLast] = useState(null);
-  // Pending stop: timer stopped, waiting for intensity/note before committing
-  const [pendingStop, setPendingStop] = useState(null); // { startTime, endTime, duration }
   const sessionStartRef = useRef(null);
 
   useEffect(() => {
@@ -75,40 +73,24 @@ export function useContractionStore() {
   const startContraction = () => {
     if (sessionStartRef.current === null) sessionStartRef.current = Date.now();
     setActiveStart(Date.now());
-    setPendingStop(null);
   };
 
-  // Stop freezes the timer and opens the intensity picker
-  const requestStop = () => {
+  // Immediately records the contraction with intensity: null, note: ''
+  const stopContraction = () => {
     if (!activeStart) return;
     const endTime = Date.now();
     const duration = Math.round((endTime - activeStart) / 1000);
-    setActiveStart(null);
-    setElapsed(duration); // freeze display at final duration
-    setPendingStop({ startTime: activeStart, endTime, duration });
-  };
-
-  // Commit the stopped contraction with optional intensity (1-5) and note
-  const confirmStop = ({ intensity = null, note = '' } = {}) => {
-    if (!pendingStop) return;
     const newContraction = {
       id: crypto.randomUUID(),
-      startTime: pendingStop.startTime,
-      endTime: pendingStop.endTime,
-      duration: pendingStop.duration,
-      intensity,
-      note: note.trim(),
+      startTime: activeStart,
+      endTime,
+      duration,
+      intensity: null,
+      note: '',
     };
-    setContractions((prev) => [newContraction, ...prev]);
-    setPendingStop(null);
+    setActiveStart(null);
     setElapsed(0);
-  };
-
-  const cancelStop = () => {
-    // Re-start from the original startTime so no time is lost
-    if (!pendingStop) return;
-    setActiveStart(pendingStop.startTime);
-    setPendingStop(null);
+    setContractions((prev) => [newContraction, ...prev]);
   };
 
   const updateContraction = (id, fields) => {
@@ -124,13 +106,11 @@ export function useContractionStore() {
   const reset = () => {
     setActiveStart(null);
     setElapsed(0);
-    setPendingStop(null);
     setContractions([]);
     sessionStartRef.current = null;
   };
 
   const isActive = activeStart !== null;
-  const isPendingStop = pendingStop !== null;
 
   // --- Derived stats ---
   const durations = contractions.map((c) => c.duration); // newest first
@@ -181,8 +161,6 @@ export function useContractionStore() {
   return {
     contractions,
     isActive,
-    isPendingStop,
-    pendingStop,
     elapsed,
     avgDuration,
     avgInterval,
@@ -197,9 +175,7 @@ export function useContractionStore() {
     perHour,
     sessionDuration,
     startContraction,
-    requestStop,
-    confirmStop,
-    cancelStop,
+    stopContraction,
     updateContraction,
     deleteContraction,
     reset,

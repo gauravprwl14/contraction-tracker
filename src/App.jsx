@@ -30,15 +30,14 @@ function exportCSV(contractions, intervals) {
 }
 
 export default function App() {
-  const store = useContractionStore();
   const {
-    contractions, isActive, isPendingStop, pendingStop, elapsed,
+    contractions, isActive, elapsed,
     avgDuration, avgInterval, longestDuration, shortestDuration,
     intervals, timeSinceLast, is511,
     durationTrend, intervalTrend, laborStage, perHour, sessionDuration,
-    startContraction, requestStop, confirmStop, cancelStop,
+    startContraction, stopContraction,
     updateContraction, deleteContraction, reset,
-  } = store;
+  } = useContractionStore();
 
   const [confirmReset, setConfirmReset] = useState(false);
   const [activeTab, setActiveTab] = useState('graph'); // 'graph' | 'history'
@@ -59,13 +58,9 @@ export default function App() {
       <main className="app-main">
         <TimerButton
           isActive={isActive}
-          isPendingStop={isPendingStop}
-          pendingStop={pendingStop}
           elapsed={elapsed}
           onStart={startContraction}
-          onRequestStop={requestStop}
-          onConfirmStop={confirmStop}
-          onCancelStop={cancelStop}
+          onStop={stopContraction}
         />
 
         <StatsBar
