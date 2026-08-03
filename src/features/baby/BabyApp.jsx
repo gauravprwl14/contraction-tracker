@@ -5,6 +5,8 @@ import { HomeScreen } from './components/HomeScreen';
 import { Toast } from './components/Toast';
 import { BreastFeedSheet } from './components/BreastFeedSheet';
 import { ExternalFeedSheet } from './components/ExternalFeedSheet';
+import { LogTab } from './components/LogTab';
+import { EditSheet } from './components/EditSheet';
 import './baby.css';
 
 const TABS = [
@@ -18,6 +20,8 @@ export default function BabyApp() {
   const diaperStore = useDiaperStore();
   const [tab, setTab] = useState('home');
   const [toast, setToast] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [logFilter, setLogFilter] = useState('all');
   // Reopen a running session on mount only — a user who cancels a sheet shouldn't
   // have it snap back on a later re-render, so this is a lazy initializer, not an effect.
   const [sheet, setSheet] = useState(() => {
@@ -25,6 +29,26 @@ export default function BabyApp() {
       return feedStore.active.type === 'breast' ? 'breast' : 'external';
     }
     return null;
+  });
+  // A feed left running for hours shouldn't silently resume its timer — surface it
+  // as an edit sheet instead so the user corrects the end time or discards it.
+  // Same lazy-initializer pattern as `sheet` above: this must run once at mount,
+  // not as an effect that calls setState during render (react-hooks/purity).
+  const [staleRecord, setStaleRecord] = useState(() => {
+    if (!feedStore.staleActive || !feedStore.active) return null;
+    const a = feedStore.active;
+    return a.type === 'breast'
+      ? {
+          id: 'stale',
+          type: 'breast',
+          startTime: a.startTime,
+          endTime: a.startTime + a.leftMs + a.rightMs,
+          leftMs: a.leftMs,
+          rightMs: a.rightMs,
+          lastSide: a.activeSide ?? 'left',
+          note: '',
+        }
+      : { id: 'stale', type: 'external', startTime: a.startTime, endTime: a.startTime, ...a.draft };
   });
 
   const handleLogDiaper = ({ pee, poop }) => {
@@ -44,11 +68,19 @@ export default function BabyApp() {
           onOpenBreast={() => setSheet('breast')}
           onOpenExternal={() => { feedStore.startExternal(); setSheet('external'); }}
           onLogDiaper={handleLogDiaper}
-          onEdit={() => {}}
+          onEdit={(kind, item) => setEditing({ kind, item })}
         />
       )}
       {tab === 'charts' && <p className="placeholder">Charts coming up.</p>}
-      {tab === 'log' && <p className="placeholder">Log coming up.</p>}
+      {tab === 'log' && (
+        <LogTab
+          feedStore={feedStore}
+          diaperStore={diaperStore}
+          filter={logFilter}
+          onFilterChange={setLogFilter}
+          onEdit={(kind, item) => setEditing({ kind, item })}
+        />
+      )}
 
       {sheet === 'breast' && (
         <BreastFeedSheet
@@ -69,6 +101,39 @@ export default function BabyApp() {
             message: `Bottle saved · ${feed.takenMl} ml`,
             onUndo: feedStore.undoLast,
           })}
+        />
+      )}
+
+      {editing && (
+        <EditSheet
+          kind={editing.kind}
+          record={editing.item}
+          onSave={(next) =>
+            (editing.kind === 'feed'
+              ? feedStore.updateFeed(next.id, next)
+              : diaperStore.updateDiaper(next.id, next))
+          }
+          onDelete={(id) =>
+            (editing.kind === 'feed' ? feedStore.deleteFeed(id) : diaperStore.deleteDiaper(id))
+          }
+          onClose={() => setEditing(null)}
+        />
+      )}
+
+      {staleRecord && (
+        <EditSheet
+          kind="feed"
+          record={staleRecord}
+          notice="This feed was left running. Check the end time and save, or delete it."
+          onSave={(next) => {
+            feedStore.addFeed({ ...next, id: crypto.randomUUID() });
+            feedStore.discardActive();
+          }}
+          onDelete={() => feedStore.discardActive()}
+          onClose={() => {
+            feedStore.discardActive();
+            setStaleRecord(null);
+          }}
         />
       )}
 

@@ -450,3 +450,147 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---- Log tab ---- */
+.log {
+  padding-bottom: 1rem;
+}
+
+.chip-row--filters {
+  margin-bottom: 1rem;
+}
+
+.log__day {
+  margin-bottom: 1rem;
+}
+
+.log__day-title {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  margin: 0;
+  padding: 0.5rem 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.log__list {
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.log__list li + li .log__row {
+  border-top: 1px solid var(--border);
+}
+
+.log__row {
+  width: 100%;
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.1s;
+}
+
+.log__row:hover {
+  background: var(--surface2);
+}
+
+.log__time {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  width: 4.6rem;
+}
+
+.log__icon {
+  flex-shrink: 0;
+}
+
+.log__text {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.log__note {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ---- Edit sheet fields ---- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.field__label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.field__input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.field__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.sheet__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 0.5rem;
+}
+
+.sheet__foot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.sheet__foot .sheet__primary {
+  flex: 1;
+  margin-top: 0;
+}
+
+.sheet__danger {
+  min-height: 48px;
+  padding: 0 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--accent-stop);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
