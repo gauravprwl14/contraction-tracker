@@ -4,6 +4,7 @@ import { useDiaperStore } from './hooks/useDiaperStore';
 import { HomeScreen } from './components/HomeScreen';
 import { Toast } from './components/Toast';
 import { BreastFeedSheet } from './components/BreastFeedSheet';
+import { ExternalFeedSheet } from './components/ExternalFeedSheet';
 import './baby.css';
 
 const TABS = [
@@ -41,7 +42,7 @@ export default function BabyApp() {
           feedStore={feedStore}
           diaperStore={diaperStore}
           onOpenBreast={() => setSheet('breast')}
-          onOpenExternal={() => {}}
+          onOpenExternal={() => { feedStore.startExternal(); setSheet('external'); }}
           onLogDiaper={handleLogDiaper}
           onEdit={() => {}}
         />
@@ -55,6 +56,17 @@ export default function BabyApp() {
           onClose={() => setSheet(null)}
           onSaved={(feed) => setToast({
             message: `Feed saved · ${Math.round((feed.leftMs + feed.rightMs) / 60000)}m`,
+            onUndo: feedStore.undoLast,
+          })}
+        />
+      )}
+
+      {sheet === 'external' && (
+        <ExternalFeedSheet
+          feedStore={feedStore}
+          onClose={() => setSheet(null)}
+          onSaved={(feed) => setToast({
+            message: `Bottle saved · ${feed.takenMl} ml`,
             onUndo: feedStore.undoLast,
           })}
         />
