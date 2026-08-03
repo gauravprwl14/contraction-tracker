@@ -1,4 +1,4 @@
-import { formatDuration } from '../utils/format';
+import { formatDuration } from '../../../utils/format';
 
 const TREND_ICON = { up: '↑', down: '↓', stable: '→', null: '' };
 const TREND_COLOR = { up: '#ff8a5a', down: '#4cffb0', stable: '#888898', null: 'transparent' };

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { formatTime } from '../utils/format';
+import { formatTime } from '../../../utils/format';
 
 // Layout constants
 const BAR_W    = 38;   // fixed bar width px

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { formatDuration, formatTime, formatDate } from '../utils/format';
+import { formatDuration, formatTime, formatDate } from '../../../utils/format';
 
 const PAGE_SIZE = 30;
 
