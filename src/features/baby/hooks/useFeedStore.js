@@ -105,10 +105,12 @@ export function useFeedStore() {
 
   const undoLast = useCallback(() => {
     const id = lastAddedRef.current;
-    if (!id) return;
+    if (!id) return undefined;
     lastAddedRef.current = null;
+    const removed = feeds.find((f) => f.id === id);
     setFeeds((prev) => prev.filter((f) => f.id !== id));
-  }, []);
+    return removed;
+  }, [feeds]);
 
   const replaceAll = useCallback((next) => setFeeds([...next].sort(byNewest)), []);
 
