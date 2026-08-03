@@ -7,6 +7,7 @@ import { BreastFeedSheet } from './components/BreastFeedSheet';
 import { ExternalFeedSheet } from './components/ExternalFeedSheet';
 import { LogTab } from './components/LogTab';
 import { EditSheet } from './components/EditSheet';
+import { ChartsTab } from './components/ChartsTab';
 import './baby.css';
 
 const TABS = [
@@ -71,7 +72,7 @@ export default function BabyApp() {
           onEdit={(kind, item) => setEditing({ kind, item })}
         />
       )}
-      {tab === 'charts' && <p className="placeholder">Charts coming up.</p>}
+      {tab === 'charts' && <ChartsTab feedStore={feedStore} diaperStore={diaperStore} />}
       {tab === 'log' && (
         <LogTab
           feedStore={feedStore}
