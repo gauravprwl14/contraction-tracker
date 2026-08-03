@@ -3,6 +3,7 @@ import { useFeedStore } from './hooks/useFeedStore';
 import { useDiaperStore } from './hooks/useDiaperStore';
 import { HomeScreen } from './components/HomeScreen';
 import { Toast } from './components/Toast';
+import { BreastFeedSheet } from './components/BreastFeedSheet';
 import './baby.css';
 
 const TABS = [
@@ -16,6 +17,14 @@ export default function BabyApp() {
   const diaperStore = useDiaperStore();
   const [tab, setTab] = useState('home');
   const [toast, setToast] = useState(null);
+  // Reopen a running session on mount only — a user who cancels a sheet shouldn't
+  // have it snap back on a later re-render, so this is a lazy initializer, not an effect.
+  const [sheet, setSheet] = useState(() => {
+    if (feedStore.active && !feedStore.staleActive) {
+      return feedStore.active.type === 'breast' ? 'breast' : 'external';
+    }
+    return null;
+  });
 
   const handleLogDiaper = ({ pee, poop }) => {
     diaperStore.logDiaper({ pee, poop });
@@ -31,7 +40,7 @@ export default function BabyApp() {
         <HomeScreen
           feedStore={feedStore}
           diaperStore={diaperStore}
-          onOpenBreast={() => {}}
+          onOpenBreast={() => setSheet('breast')}
           onOpenExternal={() => {}}
           onLogDiaper={handleLogDiaper}
           onEdit={() => {}}
@@ -39,6 +48,17 @@ export default function BabyApp() {
       )}
       {tab === 'charts' && <p className="placeholder">Charts coming up.</p>}
       {tab === 'log' && <p className="placeholder">Log coming up.</p>}
+
+      {sheet === 'breast' && (
+        <BreastFeedSheet
+          feedStore={feedStore}
+          onClose={() => setSheet(null)}
+          onSaved={(feed) => setToast({
+            message: `Feed saved · ${Math.round((feed.leftMs + feed.rightMs) / 60000)}m`,
+            onUndo: feedStore.undoLast,
+          })}
+        />
+      )}
 
       {toast && (
         <Toast

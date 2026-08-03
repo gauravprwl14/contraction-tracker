@@ -223,3 +223,153 @@
   padding: 2.5rem 1rem;
   color: var(--text-muted);
 }
+
+/* ---- Full-screen sheet ---- */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  padding: calc(0.75rem + env(safe-area-inset-top)) 1rem calc(1rem + env(safe-area-inset-bottom));
+}
+
+.sheet__head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.sheet__close {
+  justify-self: start;
+  min-height: 44px;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0.25rem;
+}
+
+.sheet__title {
+  justify-self: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.sheet__elapsed {
+  justify-self: end;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet__timer {
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin: 0.5rem 0;
+}
+
+.sheet__hint,
+.sheet__warn {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.sheet__warn {
+  color: var(--warn);
+}
+
+.side-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.side-btn {
+  position: relative;
+  min-height: 30vh;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s ease;
+}
+
+.side-btn:active {
+  transform: scale(0.98);
+}
+
+.side-btn__label {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.side-btn__time {
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.side-btn--suggested {
+  border-color: var(--accent);
+}
+
+.side-btn--running {
+  border-color: var(--accent);
+  background: rgba(124, 106, 255, 0.12);
+}
+
+.side-btn--running .side-btn__time {
+  color: var(--text);
+}
+
+.side-btn__dot {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: babyPulse 1.4s ease-out infinite;
+}
+
+@keyframes babyPulse {
+  0%   { transform: scale(0.9); opacity: 1; }
+  70%  { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.sheet__primary {
+  min-height: 56px;
+  border: none;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.75rem;
+  transition: opacity 0.15s;
+}
+
+.sheet__primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
