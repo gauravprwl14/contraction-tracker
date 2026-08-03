@@ -1,6 +1,8 @@
 import { startOfDay } from '../../../utils/dates';
 import { TimelineStrip } from './charts/TimelineStrip';
 import { FeedGapChart } from './charts/FeedGapChart';
+import { DailyTotalsChart } from './charts/DailyTotalsChart';
+import { SideBalanceChart } from './charts/SideBalanceChart';
 
 export function ChartsTab({ feedStore, diaperStore }) {
   // `now` is threaded down from the store's ticking clock instead of calling
@@ -16,6 +18,8 @@ export function ChartsTab({ feedStore, diaperStore }) {
         now={now}
       />
       <FeedGapChart feeds={feedStore.feeds} />
+      <DailyTotalsChart feeds={feedStore.feeds} diapers={diaperStore.diapers} now={now} />
+      <SideBalanceChart feeds={feedStore.feeds} now={now} />
     </div>
   );
 }

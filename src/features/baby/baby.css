@@ -676,3 +676,49 @@
 .key--green { background: var(--green); }
 .key--warn { background: var(--warn); }
 .key--blue { background: #5ab8ff; }
+
+.chip--sm {
+  min-height: 40px;
+  padding: 0 0.75rem;
+  font-size: 0.78rem;
+}
+
+.chip-row--series {
+  flex-wrap: wrap;
+}
+
+.balance {
+  margin-bottom: 0.85rem;
+}
+
+.balance:last-child {
+  margin-bottom: 0;
+}
+
+.balance__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  margin-bottom: 0.4rem;
+}
+
+.balance__nums {
+  color: var(--text-muted);
+}
+
+.balance__track {
+  display: flex;
+  height: 18px;
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface2);
+}
+
+.balance__left {
+  background: var(--accent);
+}
+
+.balance__right {
+  background: var(--green);
+}
