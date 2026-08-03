@@ -21,7 +21,10 @@ function describe(entry) {
   return `${item.takenMl} ml taken of ${item.offeredMl} · ${item.milk} · ${item.method}`;
 }
 
-export function LogTab({ feedStore, diaperStore, filter, onFilterChange, onEdit }) {
+export function LogTab({
+  feedStore, diaperStore, filter, onFilterChange, onEdit,
+  onExportJson, onExportFeedsCsv, onExportDiapersCsv, onImport,
+}) {
   const entries = [
     ...(filter !== 'diapers'
       ? feedStore.feeds.map((f) => ({ kind: 'feed', time: f.startTime, item: f }))
@@ -35,6 +38,25 @@ export function LogTab({ feedStore, diaperStore, filter, onFilterChange, onEdit 
 
   return (
     <div className="log">
+      <div className="log__backup">
+        <button className="action--link" onClick={onExportJson}>Backup (JSON)</button>
+        <button className="action--link" onClick={onExportFeedsCsv}>Feeds CSV</button>
+        <button className="action--link" onClick={onExportDiapersCsv}>Diapers CSV</button>
+        <label className="action--link">
+          Import
+          <input
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onImport(file);
+              e.target.value = '';
+            }}
+          />
+        </label>
+      </div>
+
       <div className="chip-row chip-row--filters">
         {FILTERS.map((f) => (
           <button

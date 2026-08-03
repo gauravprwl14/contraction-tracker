@@ -456,6 +456,27 @@
   padding-bottom: 1rem;
 }
 
+.log__backup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.action--link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0 0.1rem;
+}
+
 .chip-row--filters {
   margin-bottom: 1rem;
 }

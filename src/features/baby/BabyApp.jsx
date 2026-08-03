@@ -8,6 +8,7 @@ import { ExternalFeedSheet } from './components/ExternalFeedSheet';
 import { LogTab } from './components/LogTab';
 import { EditSheet } from './components/EditSheet';
 import { ChartsTab } from './components/ChartsTab';
+import { buildBackup, parseBackup, feedsToCsv, diapersToCsv, download } from './backup';
 import './baby.css';
 
 const TABS = [
@@ -60,6 +61,43 @@ export default function BabyApp() {
     });
   };
 
+  const handleExportJson = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    download(
+      `baby-tracker-${today}.json`,
+      JSON.stringify(buildBackup(feedStore.feeds, diaperStore.diapers, feedStore.quantityPresets), null, 2),
+      'application/json'
+    );
+  };
+
+  const handleExportFeedsCsv = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    download(`baby-feeds-${today}.csv`, feedsToCsv(feedStore.feeds), 'text/csv');
+  };
+
+  const handleExportDiapersCsv = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    download(`baby-diapers-${today}.csv`, diapersToCsv(diaperStore.diapers), 'text/csv');
+  };
+
+  const handleImport = async (file) => {
+    let data;
+    try {
+      data = parseBackup(await file.text());
+    } catch (err) {
+      setToast({ message: err.message });
+      return;
+    }
+    const total = data.feeds.length + data.diapers.length;
+    if (!window.confirm(
+      `Replace all local data with ${data.feeds.length} feeds and ${data.diapers.length} diapers from this backup? This cannot be undone.`
+    )) return;
+    feedStore.replaceAll(data.feeds);
+    diaperStore.replaceAll(data.diapers);
+    if (data.presets.length) feedStore.setQuantityPresets(data.presets);
+    setToast({ message: `Imported ${total} records` });
+  };
+
   return (
     <main className="app-main baby">
       {tab === 'home' && (
@@ -80,6 +118,10 @@ export default function BabyApp() {
           filter={logFilter}
           onFilterChange={setLogFilter}
           onEdit={(kind, item) => setEditing({ kind, item })}
+          onExportJson={handleExportJson}
+          onExportFeedsCsv={handleExportFeedsCsv}
+          onExportDiapersCsv={handleExportDiapersCsv}
+          onImport={handleImport}
         />
       )}
 
