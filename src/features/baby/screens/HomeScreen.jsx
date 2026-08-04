@@ -58,6 +58,14 @@ export function HomeScreen({
           </button>
         </div>
       )}
+      {armed && (
+        <div className="actions actions--secondary">
+          <button className="action action--bottle" onClick={() => onStart('bottle')}>
+            <Icon name="bottle" size={20} />
+            <span>Bottle</span>
+          </button>
+        </div>
+      )}
 
       <div className="actions actions--diaper">
         <button className="action action--sm" onClick={() => onLogDiaper({ pee: true, poop: false })}>

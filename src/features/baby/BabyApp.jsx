@@ -7,6 +7,7 @@ import { ChartsScreen } from './screens/ChartsScreen';
 import { LogScreen } from './screens/LogScreen';
 import { ActiveSessionBar } from './session/ActiveSessionBar';
 import { StartSessionGuard } from './session/StartSessionGuard';
+import { BottleSheet } from './session/BottleSheet';
 import { decideStart } from './session/sessionGuard';
 import { Toast } from './components/Toast';
 import { EditSheet } from './components/EditSheet';
@@ -30,6 +31,7 @@ export default function BabyApp() {
   const [editing, setEditing] = useState(null);
   const [pendingStart, setPendingStart] = useState(null);
   const [armed, setArmed] = useState(false);
+  const [bottleOpen, setBottleOpen] = useState(false);
 
   // Keep the clock's tick rate in step with whether a session is running.
   // useNow is called before the store exists, so this reconciles on the next
@@ -110,12 +112,8 @@ export default function BabyApp() {
   // tapped, so a side is never chosen on the user's behalf. A bottle has no
   // side to pick, so it starts straight away.
   const beginSession = (type) => {
-    if (type === 'breast') {
-      setArmed(true);
-    } else {
-      setArmed(false);
-      feedStore.startExternal();
-    }
+    if (type === 'breast') setArmed(true);
+    else setBottleOpen(true);
   };
 
   const handlePickSide = (side) => {
@@ -204,6 +202,16 @@ export default function BabyApp() {
             else diaperStore.deleteDiaper(id);
           }}
           onClose={() => setEditing(null)}
+        />
+      )}
+
+      {bottleOpen && (
+        <BottleSheet
+          prefs={feedStore.prefs}
+          quantityPresets={feedStore.quantityPresets}
+          setQuantityPresets={feedStore.setQuantityPresets}
+          onSave={(feed) => { feedStore.addFeed(feed); handleSaved(feed); }}
+          onClose={() => setBottleOpen(false)}
         />
       )}
 

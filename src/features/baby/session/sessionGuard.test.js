@@ -10,22 +10,20 @@ describe('decideStart', () => {
     expect(decideStart(null, 'bottle')).toEqual({ action: 'start', type: 'bottle' });
   });
 
-  it('asks for confirmation when a breast feed is running and a bottle is requested', () => {
+  it('never blocks a bottle, even while a breast feed is running', () => {
     const running = createBreastSession('left', T0);
-    expect(decideStart(running, 'bottle')).toEqual({
-      action: 'confirm', running, requested: 'bottle',
-    });
+    expect(decideStart(running, 'bottle')).toEqual({ action: 'start', type: 'bottle' });
   });
 
-  it('asks for confirmation when a bottle is running and a breast feed is requested', () => {
-    const running = createExternalSession(T0);
+  it('asks for confirmation when a breast feed would replace a running one', () => {
+    const running = createBreastSession('left', T0);
     expect(decideStart(running, 'breast')).toEqual({
       action: 'confirm', running, requested: 'breast',
     });
   });
 
-  it('asks for confirmation on a same-type restart', () => {
-    const running = createBreastSession('left', T0);
+  it('still guards a breast feed against a legacy external session in the slot', () => {
+    const running = createExternalSession(T0);
     expect(decideStart(running, 'breast').action).toBe('confirm');
   });
 });
