@@ -29,6 +29,7 @@ export default function BabyApp() {
   const [toast, setToast] = useState(null);
   const [editing, setEditing] = useState(null);
   const [pendingStart, setPendingStart] = useState(null);
+  const [armed, setArmed] = useState(false);
 
   // Keep the clock's tick rate in step with whether a session is running.
   // useNow is called before the store exists, so this reconciles on the next
@@ -105,9 +106,21 @@ export default function BabyApp() {
     setToast({ message: `Imported ${total} records` });
   };
 
+  // Tapping "Breast" only arms the card — the timer starts when a side is
+  // tapped, so a side is never chosen on the user's behalf. A bottle has no
+  // side to pick, so it starts straight away.
   const beginSession = (type) => {
-    if (type === 'breast') feedStore.startBreast(feedStore.suggestion);
-    else feedStore.startExternal();
+    if (type === 'breast') {
+      setArmed(true);
+    } else {
+      setArmed(false);
+      feedStore.startExternal();
+    }
+  };
+
+  const handlePickSide = (side) => {
+    setArmed(false);
+    feedStore.startBreast(side);
   };
 
   const handleStart = (type) => {
@@ -142,7 +155,10 @@ export default function BabyApp() {
         <HomeScreen
           feedStore={feedStore}
           diaperStore={diaperStore}
+          armed={armed}
           onStart={handleStart}
+          onPickSide={handlePickSide}
+          onCancelArm={() => setArmed(false)}
           onLogDiaper={handleLogDiaper}
           onEdit={(kind, item) => setEditing({ kind, item })}
           onEditStale={handleEditStale}

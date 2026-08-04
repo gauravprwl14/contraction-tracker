@@ -250,6 +250,9 @@
 
 .side-btn--running { box-shadow: inset 0 0 0 1px var(--accent); }
 
+.side-btn--suggested { border-color: var(--accent); }
+.side-btn--suggested .side-btn__label { color: var(--accent); }
+
 .side-btn__label { font-size: var(--fs-sm); color: var(--text-muted); }
 
 .side-btn__time {

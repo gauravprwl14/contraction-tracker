@@ -1,12 +1,14 @@
 import { formatGap, formatTime } from '../../../utils/format';
 import { feedSummary, diaperSummary, entryIcon } from '../entrySummary';
 import { ActiveSessionCard } from '../session/ActiveSessionCard';
+import { PendingBreastCard } from '../session/PendingBreastCard';
 import { Icon } from '../icons/Icon';
 
 export function HomeScreen({
-  feedStore, diaperStore, onStart, onLogDiaper, onEdit, onEditStale, onSaved,
+  feedStore, diaperStore, armed, onStart, onPickSide, onCancelArm,
+  onLogDiaper, onEdit, onEditStale, onSaved,
 }) {
-  const { active, lastFeed, msSinceLastFeed, todayStats } = feedStore;
+  const { active, suggestion, lastFeed, msSinceLastFeed, todayStats } = feedStore;
   const diaperToday = diaperStore.todayStats;
 
   const recent = [
@@ -20,6 +22,12 @@ export function HomeScreen({
     <div className="home">
       {active ? (
         <ActiveSessionCard feedStore={feedStore} onSaved={onSaved} onEditStale={onEditStale} />
+      ) : armed ? (
+        <PendingBreastCard
+          suggestion={suggestion}
+          onPick={onPickSide}
+          onCancel={onCancelArm}
+        />
       ) : (
         <>
           <div className="banner">
