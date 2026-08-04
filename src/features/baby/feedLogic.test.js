@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   STALE_MS, createBreastSession, createExternalSession, commitSide, switchSide,
   sideElapsedMs, finalizeBreastFeed, finalizeExternalFeed, isStale, feedDurationMs,
-  suggestedSide, lastExternalPrefs, gapsBetweenFeeds, todayFeedStats,
+  suggestedSide, lastExternalPrefs, gapsBetweenFeeds, todayFeedStats, pauseSession, resumeSession,
   dailyFeedTotals, sideBalance,
 } from './feedLogic';
 
@@ -178,5 +178,61 @@ describe('derived values', () => {
       breastFeed({ id: 'old', startTime: at(2026, 7, 1, 9, 0), leftMs: 99 * MIN, rightMs: 99 * MIN }),
     ];
     expect(sideBalance(feeds, at(2026, 8, 1))).toEqual({ leftMs: 6 * MIN, rightMs: 4 * MIN });
+  });
+});
+
+describe('pause and resume', () => {
+  it('commits the running side and freezes accrual when paused', () => {
+    const a = createBreastSession('left', T0);
+    const paused = pauseSession(a, T0 + 5 * MIN);
+    expect(paused.leftMs).toBe(5 * MIN);
+    expect(paused.pausedAt).toBe(T0 + 5 * MIN);
+    expect(sideElapsedMs(paused, 'left', T0 + 30 * MIN)).toBe(5 * MIN);
+  });
+
+  it('resumes accrual from the moment of resume, not from the pause', () => {
+    const paused = pauseSession(createBreastSession('left', T0), T0 + 5 * MIN);
+    const resumed = resumeSession(paused, T0 + 25 * MIN);
+    expect(resumed.pausedAt).toBeUndefined();
+    expect(sideElapsedMs(resumed, 'left', T0 + 27 * MIN)).toBe(7 * MIN);
+  });
+
+  it('leaves the idle side alone while paused', () => {
+    const a = switchSide(createBreastSession('left', T0), 'right', T0 + 4 * MIN);
+    const paused = pauseSession(a, T0 + 6 * MIN);
+    expect(sideElapsedMs(paused, 'left', T0 + 60 * MIN)).toBe(4 * MIN);
+    expect(sideElapsedMs(paused, 'right', T0 + 60 * MIN)).toBe(2 * MIN);
+  });
+
+  it('is a no-op on an already paused session', () => {
+    const paused = pauseSession(createBreastSession('left', T0), T0 + 5 * MIN);
+    expect(pauseSession(paused, T0 + 9 * MIN)).toBe(paused);
+  });
+
+  it('is a no-op on a running session passed to resume', () => {
+    const a = createBreastSession('left', T0);
+    expect(resumeSession(a, T0 + 5 * MIN)).toBe(a);
+  });
+
+  it('is a no-op on external sessions and on null', () => {
+    const ext = createExternalSession(T0);
+    expect(pauseSession(ext, T0 + MIN)).toBe(ext);
+    expect(resumeSession(ext, T0 + MIN)).toBe(ext);
+    expect(pauseSession(null, T0)).toBe(null);
+    expect(resumeSession(null, T0)).toBe(null);
+  });
+
+  it('survives a JSON round trip through localStorage', () => {
+    const paused = pauseSession(createBreastSession('left', T0), T0 + 5 * MIN);
+    const revived = JSON.parse(JSON.stringify(paused));
+    expect(sideElapsedMs(revived, 'left', T0 + 60 * MIN)).toBe(5 * MIN);
+  });
+
+  it('finalizes a paused feed without counting the paused stretch', () => {
+    const paused = pauseSession(createBreastSession('left', T0), T0 + 5 * MIN);
+    const feed = finalizeBreastFeed(paused, T0 + 45 * MIN);
+    expect(feed.leftMs).toBe(5 * MIN);
+    expect(feed.rightMs).toBe(0);
+    expect(feed.endTime).toBe(T0 + 45 * MIN);
   });
 });

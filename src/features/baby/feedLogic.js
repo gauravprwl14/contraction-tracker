@@ -42,10 +42,22 @@ export function switchSide(active, side, now) {
   return { ...committed, activeSide: side, sideStartedAt: now };
 }
 
+export function pauseSession(active, now) {
+  if (!active || active.type !== 'breast' || active.pausedAt) return active;
+  return { ...commitSide(active, now), pausedAt: now };
+}
+
+export function resumeSession(active, now) {
+  if (!active || active.type !== 'breast' || !active.pausedAt) return active;
+  const { pausedAt, ...rest } = active;
+  void pausedAt;
+  return { ...rest, sideStartedAt: now };
+}
+
 export function sideElapsedMs(active, side, now) {
   if (!active || active.type !== 'breast') return 0;
   const base = side === 'left' ? active.leftMs : active.rightMs;
-  if (active.activeSide !== side) return base;
+  if (active.activeSide !== side || active.pausedAt) return base;
   return base + Math.max(0, now - active.sideStartedAt);
 }
 
