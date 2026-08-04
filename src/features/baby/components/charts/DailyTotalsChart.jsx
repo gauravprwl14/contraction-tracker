@@ -7,11 +7,11 @@ const H = 280;
 const PAD = 34;
 
 const SERIES = [
-  { id: 'feedCount', label: 'Feeds', color: 'var(--accent)' },
-  { id: 'totalMl', label: 'ml', color: 'var(--green)' },
-  { id: 'breastMin', label: 'Breast min', color: '#b06aff' },
-  { id: 'peeCount', label: 'Pee', color: '#5ab8ff' },
-  { id: 'poopCount', label: 'Poop', color: 'var(--warn)' },
+  { id: 'feedCount', label: 'Feeds', color: 'var(--text-muted)' },
+  { id: 'totalMl', label: 'ml', color: 'var(--amber)' },
+  { id: 'breastMin', label: 'Breast min', color: 'var(--accent)' },
+  { id: 'peeCount', label: 'Pee', color: 'var(--slate)' },
+  { id: 'poopCount', label: 'Poop', color: 'var(--stop)' },
 ];
 
 export function DailyTotalsChart({ feeds, diapers, now }) {

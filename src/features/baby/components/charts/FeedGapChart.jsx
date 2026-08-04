@@ -38,8 +38,8 @@ export function FeedGapChart({ feeds }) {
             <title>{h.toFixed(1)}h</title>
           </rect>
         ))}
-        <line x1={PAD} y1={y(avg)} x2={W - PAD} y2={y(avg)} stroke="var(--green)" strokeWidth="2" strokeDasharray="8 6" />
-        <text x={W - PAD} y={y(avg) - 8} fill="var(--green)" fontSize="18" textAnchor="end">
+        <line x1={PAD} y1={y(avg)} x2={W - PAD} y2={y(avg)} stroke="var(--amber)" strokeWidth="2" strokeDasharray="8 6" />
+        <text x={W - PAD} y={y(avg) - 8} fill="var(--amber)" fontSize="18" textAnchor="end">
           avg {avg.toFixed(1)}h
         </text>
         <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="var(--border)" strokeWidth="2" />

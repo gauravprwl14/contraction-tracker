@@ -32,7 +32,7 @@ export function TimelineStrip({ feeds, diapers, initialDayStart, now }) {
         <p className="chart__empty">Nothing logged on this day.</p>
       ) : (
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="24 hour timeline">
-          <rect x="0" y={TRACK_Y} width={W} height={TRACK_H} rx="6" fill="var(--surface2)" />
+          <rect x="0" y={TRACK_Y} width={W} height={TRACK_H} rx="6" fill="var(--surface-2)" />
 
           {[0, 6, 12, 18, 24].map((h) => (
             <g key={h}>
@@ -53,7 +53,7 @@ export function TimelineStrip({ feeds, diapers, initialDayStart, now }) {
                 y={TRACK_Y}
                 width={Math.min(w, W - x)}
                 height={TRACK_H}
-                fill={f.type === 'breast' ? 'var(--accent)' : 'var(--green)'}
+                fill={f.type === 'breast' ? 'var(--accent)' : 'var(--amber)'}
               >
                 <title>{f.type === 'breast' ? 'Breast feed' : 'Bottle feed'}</title>
               </rect>
@@ -66,7 +66,7 @@ export function TimelineStrip({ feeds, diapers, initialDayStart, now }) {
               cx={frac(d.time, dayStart) * W}
               cy={d.poop ? 22 : TRACK_Y + TRACK_H + 34}
               r="8"
-              fill={d.poop ? 'var(--warn)' : '#5ab8ff'}
+              fill={d.poop ? 'var(--stop)' : 'var(--slate)'}
             >
               <title>{d.poop ? 'Poop' : 'Pee'}</title>
             </circle>
