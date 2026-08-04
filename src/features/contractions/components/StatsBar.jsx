@@ -1,13 +1,13 @@
 import { formatDuration } from '../../../utils/format';
 
 const TREND_ICON = { up: '↑', down: '↓', stable: '→', null: '' };
-const TREND_COLOR = { up: '#ff8a5a', down: '#4cffb0', stable: '#888898', null: 'transparent' };
+const TREND_COLOR = { up: 'var(--stop)', down: 'var(--accent)', stable: 'var(--text-muted)', null: 'transparent' };
 
 const STAGE_META = {
-  tracking: { label: 'Tracking', color: '#888898', desc: 'Collecting data…' },
-  early:    { label: 'Early Labor', color: '#4cffb0', desc: 'Contractions beginning to establish' },
-  active:   { label: 'Active Labor', color: '#ffb84c', desc: 'Regular, closer contractions' },
-  transition:{ label: 'Transition', color: '#ff5a7c', desc: 'Intense — may be near delivery' },
+  tracking: { label: 'Tracking', color: 'var(--text-muted)', desc: 'Collecting data…' },
+  early:    { label: 'Early Labor', color: 'var(--accent)', desc: 'Contractions beginning to establish' },
+  active:   { label: 'Active Labor', color: 'var(--amber)', desc: 'Regular, closer contractions' },
+  transition:{ label: 'Transition', color: 'var(--stop)', desc: 'Intense — may be near delivery' },
 };
 
 function StatCard({ label, value, sub, trend, trendInvert }) {
@@ -15,7 +15,7 @@ function StatCard({ label, value, sub, trend, trendInvert }) {
   const displayTrend = trend ?? null;
   const trendColor = displayTrend
     ? (trendInvert
-        ? (displayTrend === 'down' ? '#4cffb0' : displayTrend === 'up' ? '#ff8a5a' : '#888898')
+        ? (displayTrend === 'down' ? 'var(--accent)' : displayTrend === 'up' ? 'var(--stop)' : 'var(--text-muted)')
         : TREND_COLOR[displayTrend])
     : 'transparent';
 
