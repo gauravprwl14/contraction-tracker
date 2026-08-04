@@ -1,14 +1,10 @@
 import { startOfDay } from '../../../utils/dates';
-import { TimelineStrip } from './charts/TimelineStrip';
-import { FeedGapChart } from './charts/FeedGapChart';
-import { DailyTotalsChart } from './charts/DailyTotalsChart';
-import { SideBalanceChart } from './charts/SideBalanceChart';
+import { TimelineStrip } from '../components/charts/TimelineStrip';
+import { FeedGapChart } from '../components/charts/FeedGapChart';
+import { DailyTotalsChart } from '../components/charts/DailyTotalsChart';
+import { SideBalanceChart } from '../components/charts/SideBalanceChart';
 
-export function ChartsTab({ feedStore, diaperStore }) {
-  // `now` is threaded down from the store's ticking clock instead of calling
-  // Date.now() during render, which react-hooks/purity forbids.
-  const { now } = feedStore;
-
+export function ChartsScreen({ feedStore, diaperStore, now }) {
   return (
     <div className="charts">
       <TimelineStrip

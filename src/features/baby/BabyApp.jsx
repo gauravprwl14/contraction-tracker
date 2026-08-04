@@ -1,57 +1,40 @@
 import { useState } from 'react';
+import { useNow } from './hooks/useNow';
 import { useFeedStore } from './hooks/useFeedStore';
 import { useDiaperStore } from './hooks/useDiaperStore';
-import { HomeScreen } from './components/HomeScreen';
+import { HomeScreen } from './screens/HomeScreen';
+import { ChartsScreen } from './screens/ChartsScreen';
+import { LogScreen } from './screens/LogScreen';
+import { ActiveSessionBar } from './session/ActiveSessionBar';
+import { StartSessionGuard } from './session/StartSessionGuard';
+import { decideStart } from './session/sessionGuard';
 import { Toast } from './components/Toast';
-import { BreastFeedSheet } from './components/BreastFeedSheet';
-import { ExternalFeedSheet } from './components/ExternalFeedSheet';
-import { LogTab } from './components/LogTab';
 import { EditSheet } from './components/EditSheet';
-import { ChartsTab } from './components/ChartsTab';
 import { buildBackup, parseBackup, feedsToCsv, diapersToCsv, download } from './backup';
+import { Icon } from './icons/Icon';
 import './baby.css';
 
 const TABS = [
-  { id: 'home', label: 'Home' },
-  { id: 'charts', label: 'Charts' },
-  { id: 'log', label: 'Log' },
+  { id: 'home', label: 'Home', icon: 'home' },
+  { id: 'charts', label: 'Charts', icon: 'chart' },
+  { id: 'log', label: 'Log', icon: 'list' },
 ];
 
 export default function BabyApp() {
-  const feedStore = useFeedStore();
-  const diaperStore = useDiaperStore();
+  const [liveHint, setLiveHint] = useState(false);
+  const now = useNow(liveHint);
+  const feedStore = useFeedStore(now);
+  const diaperStore = useDiaperStore(now);
   const [tab, setTab] = useState('home');
   const [toast, setToast] = useState(null);
   const [editing, setEditing] = useState(null);
-  const [logFilter, setLogFilter] = useState('all');
-  // Reopen a running session on mount only — a user who cancels a sheet shouldn't
-  // have it snap back on a later re-render, so this is a lazy initializer, not an effect.
-  const [sheet, setSheet] = useState(() => {
-    if (feedStore.active && !feedStore.staleActive) {
-      return feedStore.active.type === 'breast' ? 'breast' : 'external';
-    }
-    return null;
-  });
-  // A feed left running for hours shouldn't silently resume its timer — surface it
-  // as an edit sheet instead so the user corrects the end time or discards it.
-  // Same lazy-initializer pattern as `sheet` above: this must run once at mount,
-  // not as an effect that calls setState during render (react-hooks/purity).
-  const [staleRecord, setStaleRecord] = useState(() => {
-    if (!feedStore.staleActive || !feedStore.active) return null;
-    const a = feedStore.active;
-    return a.type === 'breast'
-      ? {
-          id: 'stale',
-          type: 'breast',
-          startTime: a.startTime,
-          endTime: a.startTime + a.leftMs + a.rightMs,
-          leftMs: a.leftMs,
-          rightMs: a.rightMs,
-          lastSide: a.activeSide ?? 'left',
-          note: '',
-        }
-      : { id: 'stale', type: 'external', startTime: a.startTime, endTime: a.startTime, ...a.draft };
-  });
+  const [pendingStart, setPendingStart] = useState(null);
+
+  // Keep the clock's tick rate in step with whether a session is running.
+  // useNow is called before the store exists, so this reconciles on the next
+  // render rather than being derived inline.
+  const isLive = Boolean(feedStore.active);
+  if (isLive !== liveHint) setLiveHint(isLive);
 
   const handleLogDiaper = ({ pee, poop }) => {
     diaperStore.logDiaper({ pee, poop });
@@ -61,24 +44,48 @@ export default function BabyApp() {
     });
   };
 
-  const handleExportJson = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    download(
-      `baby-tracker-${today}.json`,
-      JSON.stringify(buildBackup(feedStore.feeds, diaperStore.diapers, feedStore.quantityPresets), null, 2),
-      'application/json'
-    );
+  const handleSaved = (feed) => setToast({
+    message: feed.type === 'breast'
+      ? `Feed saved · ${Math.round((feed.leftMs + feed.rightMs) / 60000)}m`
+      : `Bottle saved · ${feed.takenMl} ml`,
+    onUndo: feedStore.undoLast,
+  });
+
+  const handleEditStale = (active) => {
+    setEditing({
+      kind: 'feed',
+      stale: true,
+      item: active.type === 'breast'
+        ? {
+            id: 'stale', type: 'breast', startTime: active.startTime,
+            endTime: active.startTime + active.leftMs + active.rightMs,
+            leftMs: active.leftMs, rightMs: active.rightMs,
+            lastSide: active.activeSide ?? 'left', note: '',
+          }
+        : {
+            id: 'stale', type: 'external', startTime: active.startTime,
+            endTime: active.startTime, ...active.draft,
+          },
+    });
   };
 
-  const handleExportFeedsCsv = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    download(`baby-feeds-${today}.csv`, feedsToCsv(feedStore.feeds), 'text/csv');
-  };
+  const today = () => new Date(now).toISOString().slice(0, 10);
 
-  const handleExportDiapersCsv = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    download(`baby-diapers-${today}.csv`, diapersToCsv(diaperStore.diapers), 'text/csv');
-  };
+  const handleExportJson = () => download(
+    `baby-tracker-${today()}.json`,
+    JSON.stringify(
+      buildBackup(feedStore.feeds, diaperStore.diapers, feedStore.quantityPresets),
+      null,
+      2
+    ),
+    'application/json'
+  );
+
+  const handleExportFeedsCsv = () =>
+    download(`baby-feeds-${today()}.csv`, feedsToCsv(feedStore.feeds), 'text/csv');
+
+  const handleExportDiapersCsv = () =>
+    download(`baby-diapers-${today()}.csv`, diapersToCsv(diaperStore.diapers), 'text/csv');
 
   const handleImport = async (file) => {
     let data;
@@ -98,25 +105,58 @@ export default function BabyApp() {
     setToast({ message: `Imported ${total} records` });
   };
 
+  const beginSession = (type) => {
+    if (type === 'breast') feedStore.startBreast(feedStore.suggestion);
+    else feedStore.startExternal();
+  };
+
+  const handleStart = (type) => {
+    const decision = decideStart(feedStore.active, type);
+    if (decision.action === 'start') beginSession(type);
+    else setPendingStart(decision);
+  };
+
+  const handleSaveAndStart = () => {
+    const feed = feedStore.active.type === 'breast'
+      ? feedStore.stopBreast()
+      : feedStore.saveExternal();
+    if (feed) handleSaved(feed);
+    beginSession(pendingStart.requested);
+    setPendingStart(null);
+  };
+
+  const handleDiscardAndStart = () => {
+    feedStore.discardActive();
+    beginSession(pendingStart.requested);
+    setPendingStart(null);
+  };
+
+  const handleCancelStart = () => {
+    setPendingStart(null);
+    setTab('home');
+  };
+
   return (
     <main className="app-main baby">
       {tab === 'home' && (
         <HomeScreen
           feedStore={feedStore}
           diaperStore={diaperStore}
-          onOpenBreast={() => setSheet('breast')}
-          onOpenExternal={() => { feedStore.startExternal(); setSheet('external'); }}
+          onStart={handleStart}
           onLogDiaper={handleLogDiaper}
           onEdit={(kind, item) => setEditing({ kind, item })}
+          onEditStale={handleEditStale}
+          onSaved={handleSaved}
         />
       )}
-      {tab === 'charts' && <ChartsTab feedStore={feedStore} diaperStore={diaperStore} />}
+      {tab === 'charts' && (
+        <ChartsScreen feedStore={feedStore} diaperStore={diaperStore} now={now} />
+      )}
       {tab === 'log' && (
-        <LogTab
+        <LogScreen
           feedStore={feedStore}
           diaperStore={diaperStore}
-          filter={logFilter}
-          onFilterChange={setLogFilter}
+          now={now}
           onEdit={(kind, item) => setEditing({ kind, item })}
           onExportJson={handleExportJson}
           onExportFeedsCsv={handleExportFeedsCsv}
@@ -125,67 +165,49 @@ export default function BabyApp() {
         />
       )}
 
-      {sheet === 'breast' && (
-        <BreastFeedSheet
-          feedStore={feedStore}
-          onClose={() => setSheet(null)}
-          onSaved={(feed) => setToast({
-            message: `Feed saved · ${Math.round((feed.leftMs + feed.rightMs) / 60000)}m`,
-            onUndo: feedStore.undoLast,
-          })}
-        />
-      )}
-
-      {sheet === 'external' && (
-        <ExternalFeedSheet
-          feedStore={feedStore}
-          onClose={() => setSheet(null)}
-          onSaved={(feed) => setToast({
-            message: `Bottle saved · ${feed.takenMl} ml`,
-            onUndo: feedStore.undoLast,
-          })}
-        />
-      )}
-
       {editing && (
         <EditSheet
           kind={editing.kind}
           record={editing.item}
-          onSave={(next) =>
-            (editing.kind === 'feed'
-              ? feedStore.updateFeed(next.id, next)
-              : diaperStore.updateDiaper(next.id, next))
-          }
-          onDelete={(id) =>
-            (editing.kind === 'feed' ? feedStore.deleteFeed(id) : diaperStore.deleteDiaper(id))
-          }
+          notice={editing.stale
+            ? 'This feed was left running. Check the end time and save, or delete it.'
+            : undefined}
+          onSave={(next) => {
+            if (editing.stale) {
+              feedStore.addFeed({ ...next, id: crypto.randomUUID() });
+              feedStore.discardActive();
+            } else if (editing.kind === 'feed') {
+              feedStore.updateFeed(next.id, next);
+            } else {
+              diaperStore.updateDiaper(next.id, next);
+            }
+          }}
+          onDelete={(id) => {
+            if (editing.stale) feedStore.discardActive();
+            else if (editing.kind === 'feed') feedStore.deleteFeed(id);
+            else diaperStore.deleteDiaper(id);
+          }}
           onClose={() => setEditing(null)}
         />
       )}
 
-      {staleRecord && (
-        <EditSheet
-          kind="feed"
-          record={staleRecord}
-          notice="This feed was left running. Check the end time and save, or delete it."
-          onSave={(next) => {
-            feedStore.addFeed({ ...next, id: crypto.randomUUID() });
-            feedStore.discardActive();
-          }}
-          onDelete={() => feedStore.discardActive()}
-          onClose={() => {
-            feedStore.discardActive();
-            setStaleRecord(null);
-          }}
+      {pendingStart && (
+        <StartSessionGuard
+          running={pendingStart.running}
+          requested={pendingStart.requested}
+          elapsedMs={feedStore.elapsedMs}
+          onSaveAndStart={handleSaveAndStart}
+          onDiscardAndStart={handleDiscardAndStart}
+          onCancel={handleCancelStart}
         />
       )}
 
       {toast && (
-        <Toast
-          message={toast.message}
-          onUndo={toast.onUndo}
-          onDismiss={() => setToast(null)}
-        />
+        <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={() => setToast(null)} />
+      )}
+
+      {tab !== 'home' && (
+        <ActiveSessionBar feedStore={feedStore} onOpen={() => setTab('home')} />
       )}
 
       <nav className="bottom-tabs" role="tablist">
@@ -197,6 +219,7 @@ export default function BabyApp() {
             className={`bottom-tabs__btn ${tab === t.id ? 'bottom-tabs__btn--active' : ''}`}
             onClick={() => setTab(t.id)}
           >
+            <Icon name={t.icon} size={20} />
             {t.label}
           </button>
         ))}
