@@ -6,17 +6,11 @@ export const DIAPERS_KEY = 'baby_tracker_diapers_v1';
 
 const byNewest = (a, b) => b.time - a.time;
 
-export function useDiaperStore() {
+export function useDiaperStore(now) {
   const [diapers, setDiapers] = useState(() => loadItems(DIAPERS_KEY).sort(byNewest));
-  const [now, setNow] = useState(() => Date.now());
   const lastAddedRef = useRef(null);
 
   useEffect(() => { saveItems(DIAPERS_KEY, diapers); }, [diapers]);
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
 
   const logDiaper = useCallback(({ pee, poop }) => {
     const entry = createDiaper({ pee, poop }, Date.now());

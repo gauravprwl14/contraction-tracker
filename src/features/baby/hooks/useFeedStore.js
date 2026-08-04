@@ -4,7 +4,7 @@ import { startOfDay, addDays } from '../../../utils/dates';
 import {
   createBreastSession, createExternalSession, switchSide, sideElapsedMs,
   finalizeBreastFeed, finalizeExternalFeed, isStale, suggestedSide,
-  lastExternalPrefs, todayFeedStats,
+  lastExternalPrefs, todayFeedStats, pauseSession, resumeSession,
 } from '../feedLogic';
 
 export const FEEDS_KEY = 'baby_tracker_feeds_v1';
@@ -16,7 +16,8 @@ export const DEFAULT_PRESETS = [30, 60, 90, 120];
 // Exported for testing without React.
 export function restoreActive(now) {
   const stored = loadValue(ACTIVE_KEY, null);
-  if (!stored || typeof stored.startTime !== 'number') {
+  const validType = stored?.type === 'breast' || stored?.type === 'external';
+  if (!stored || typeof stored.startTime !== 'number' || !validType) {
     return { active: null, stale: false };
   }
   return { active: stored, stale: isStale(stored, now) };
@@ -24,13 +25,12 @@ export function restoreActive(now) {
 
 const byNewest = (a, b) => b.startTime - a.startTime;
 
-export function useFeedStore() {
+export function useFeedStore(now) {
   const [feeds, setFeeds] = useState(() => loadItems(FEEDS_KEY).sort(byNewest));
   const [{ active, stale: staleActive }, setSession] = useState(() => restoreActive(Date.now()));
   const [presets, setPresets] = useState(
     () => loadValue(PREFS_KEY, { quantityPresets: DEFAULT_PRESETS }).quantityPresets ?? DEFAULT_PRESETS
   );
-  const [now, setNow] = useState(() => Date.now());
   const lastAddedRef = useRef(null);
 
   useEffect(() => { saveItems(FEEDS_KEY, feeds); }, [feeds]);
@@ -40,12 +40,6 @@ export function useFeedStore() {
     if (active) saveValue(ACTIVE_KEY, active);
     else localStorage.removeItem(ACTIVE_KEY);
   }, [active]);
-
-  // One clock for the whole store. Everything time-dependent derives from `now`.
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(id);
-  }, []);
 
   const setActive = useCallback((next, stale = false) => setSession({ active: next, stale }), []);
 
@@ -95,6 +89,14 @@ export function useFeedStore() {
 
   const discardActive = useCallback(() => setActive(null), [setActive]);
 
+  const pauseActive = useCallback(() => {
+    setSession(({ active: a }) => ({ active: pauseSession(a, Date.now()), stale: false }));
+  }, []);
+
+  const resumeActive = useCallback(() => {
+    setSession(({ active: a }) => ({ active: resumeSession(a, Date.now()), stale: false }));
+  }, []);
+
   const updateFeed = useCallback((id, fields) => {
     setFeeds((prev) => prev.map((f) => (f.id === id ? { ...f, ...fields } : f)).sort(byNewest));
   }, []);
@@ -115,14 +117,23 @@ export function useFeedStore() {
   const replaceAll = useCallback((next) => setFeeds([...next].sort(byNewest)), []);
 
   const lastFeed = feeds[0] ?? null;
+  const leftElapsed = sideElapsedMs(active, 'left', now);
+  const rightElapsed = sideElapsedMs(active, 'right', now);
 
   return {
     feeds,
     active,
     staleActive,
-    elapsedMs: active ? Math.max(0, now - active.startTime) : 0,
-    leftElapsedMs: sideElapsedMs(active, 'left', now),
-    rightElapsedMs: sideElapsedMs(active, 'right', now),
+    isPaused: Boolean(active?.pausedAt),
+    // Breast elapsed is the sum of the side timers so a paused stretch is
+    // excluded. A bottle session has no side timers, so it uses wall clock.
+    elapsedMs: active
+      ? (active.type === 'breast'
+          ? leftElapsed + rightElapsed
+          : Math.max(0, now - active.startTime))
+      : 0,
+    leftElapsedMs: leftElapsed,
+    rightElapsedMs: rightElapsed,
     msSinceLastFeed: lastFeed && !active ? Math.max(0, now - lastFeed.endTime) : null,
     lastFeed,
     suggestion: suggestedSide(feeds),
@@ -131,6 +142,7 @@ export function useFeedStore() {
     todayStats: todayFeedStats(feeds, now),
     startBreast, switchTo, stopBreast,
     startExternal, updateDraft, saveExternal, discardActive,
+    pauseActive, resumeActive,
     addFeed, updateFeed, deleteFeed, undoLast,
     setQuantityPresets: setPresets,
     replaceAll,

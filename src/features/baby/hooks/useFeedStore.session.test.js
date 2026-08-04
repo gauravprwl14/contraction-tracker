@@ -39,4 +39,9 @@ describe('restoreActive', () => {
     saveValue(ACTIVE_KEY, { type: 'breast' });
     expect(restoreActive(T0)).toEqual({ active: null, stale: false });
   });
+
+  it('drops a persisted session whose type is unrecognised', () => {
+    saveValue(ACTIVE_KEY, { type: 'nap', startTime: T0 });
+    expect(restoreActive(T0)).toEqual({ active: null, stale: false });
+  });
 });
