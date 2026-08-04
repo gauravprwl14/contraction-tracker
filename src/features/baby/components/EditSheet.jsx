@@ -5,6 +5,7 @@ import {
 import {
   DIAPER_COLORS, DIAPER_CONSISTENCIES, DIAPER_AMOUNTS,
 } from '../diaperLogic';
+import { Icon } from '../icons/Icon';
 
 const MILKS = ['expressed', 'formula'];
 const METHODS = ['bottle', 'spoon', 'syringe'];
@@ -149,13 +150,13 @@ export function EditSheet({ kind, record, onSave, onDelete, onClose, notice }) {
                   className={`chip ${draft.pee ? 'chip--active' : ''}`}
                   onClick={() => set({ pee: !draft.pee })}
                 >
-                  💧 Pee
+                  <Icon name="pee" size={16} /> Pee
                 </button>
                 <button
                   className={`chip ${draft.poop ? 'chip--active' : ''}`}
                   onClick={() => set({ poop: !draft.poop })}
                 >
-                  💩 Poop
+                  <Icon name="poop" size={16} /> Poop
                 </button>
               </div>
             </div>
