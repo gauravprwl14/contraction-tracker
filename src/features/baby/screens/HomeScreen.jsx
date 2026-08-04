@@ -1,0 +1,86 @@
+import { formatGap, formatTime } from '../../../utils/format';
+import { feedSummary, diaperSummary, entryIcon } from '../entrySummary';
+import { ActiveSessionCard } from '../session/ActiveSessionCard';
+import { Icon } from '../icons/Icon';
+
+export function HomeScreen({
+  feedStore, diaperStore, onStart, onLogDiaper, onEdit, onEditStale, onSaved,
+}) {
+  const { active, lastFeed, msSinceLastFeed, todayStats } = feedStore;
+  const diaperToday = diaperStore.todayStats;
+
+  const recent = [
+    ...feedStore.feeds.slice(0, 8).map((f) => ({ kind: 'feed', time: f.startTime, item: f })),
+    ...diaperStore.diapers.slice(0, 8).map((d) => ({ kind: 'diaper', time: d.time, item: d })),
+  ]
+    .sort((a, b) => b.time - a.time)
+    .slice(0, 8);
+
+  return (
+    <div className="home">
+      {active ? (
+        <ActiveSessionCard feedStore={feedStore} onSaved={onSaved} onEditStale={onEditStale} />
+      ) : (
+        <>
+          <div className="banner">
+            {lastFeed ? (
+              <>
+                <p className="banner__main">Last feed {formatGap(msSinceLastFeed)} ago</p>
+                <p className="banner__sub">
+                  {feedSummary(lastFeed)} · {formatTime(lastFeed.startTime)}
+                </p>
+              </>
+            ) : (
+              <p className="banner__main">No feeds recorded yet</p>
+            )}
+          </div>
+
+          <div className="actions">
+            <button className="action action--breast" onClick={() => onStart('breast')}>
+              <Icon name="breast" size={26} />
+              <span>Breast</span>
+            </button>
+            <button className="action action--bottle" onClick={() => onStart('bottle')}>
+              <Icon name="bottle" size={26} />
+              <span>Bottle</span>
+            </button>
+          </div>
+        </>
+      )}
+
+      <div className="actions actions--diaper">
+        <button className="action action--sm" onClick={() => onLogDiaper({ pee: true, poop: false })}>
+          <Icon name="pee" size={18} /> Pee
+        </button>
+        <button className="action action--sm" onClick={() => onLogDiaper({ pee: false, poop: true })}>
+          <Icon name="poop" size={18} /> Poop
+        </button>
+        <button className="action action--sm" onClick={() => onLogDiaper({ pee: true, poop: true })}>
+          Both
+        </button>
+      </div>
+
+      <p className="today-summary">
+        Today · {todayStats.feedCount} feeds
+        {todayStats.totalMl > 0 && ` · ${todayStats.totalMl} ml`}
+        {todayStats.breastMs > 0 && ` · ${Math.round(todayStats.breastMs / 60000)}m breast`}
+        {` · ${diaperToday.peeCount} pee · ${diaperToday.poopCount} poop`}
+      </p>
+
+      <ul className="recent">
+        {recent.length === 0 && <li className="recent__empty">Nothing logged yet.</li>}
+        {recent.map(({ kind, time, item }) => (
+          <li key={item.id}>
+            <button className="recent__row" onClick={() => onEdit(kind, item)}>
+              <span className="recent__time">{formatTime(time)}</span>
+              <span className="recent__icon"><Icon name={entryIcon(kind, item)} size={18} /></span>
+              <span className="recent__text">
+                {kind === 'feed' ? feedSummary(item) : diaperSummary(item)}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
