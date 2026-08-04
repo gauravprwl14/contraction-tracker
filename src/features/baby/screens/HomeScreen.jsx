@@ -29,31 +29,34 @@ export function HomeScreen({
           onCancel={onCancelArm}
         />
       ) : (
-        <>
-          <div className="banner">
-            {lastFeed ? (
-              <>
-                <p className="banner__main">Last feed {formatGap(msSinceLastFeed)} ago</p>
-                <p className="banner__sub">
-                  {feedSummary(lastFeed)} · {formatTime(lastFeed.startTime)}
-                </p>
-              </>
-            ) : (
-              <p className="banner__main">No feeds recorded yet</p>
-            )}
-          </div>
+        <div className="banner">
+          {lastFeed ? (
+            <>
+              <p className="banner__main">Last feed {formatGap(msSinceLastFeed)} ago</p>
+              <p className="banner__sub">
+                {feedSummary(lastFeed)} · {formatTime(lastFeed.startTime)}
+              </p>
+            </>
+          ) : (
+            <p className="banner__main">No feeds recorded yet</p>
+          )}
+        </div>
+      )}
 
-          <div className="actions">
-            <button className="action action--breast" onClick={() => onStart('breast')}>
-              <Icon name="breast" size={26} />
-              <span>Breast</span>
-            </button>
-            <button className="action action--bottle" onClick={() => onStart('bottle')}>
-              <Icon name="bottle" size={26} />
-              <span>Bottle</span>
-            </button>
-          </div>
-        </>
+      {/* The start actions stay reachable while a feed runs — otherwise there
+          is no way to begin a different feed, and the start guard that asks
+          what to do with the running one can never be triggered. */}
+      {!armed && (
+        <div className={`actions ${active ? 'actions--secondary' : ''}`}>
+          <button className="action action--breast" onClick={() => onStart('breast')}>
+            <Icon name="breast" size={active ? 20 : 26} />
+            <span>Breast</span>
+          </button>
+          <button className="action action--bottle" onClick={() => onStart('bottle')}>
+            <Icon name="bottle" size={active ? 20 : 26} />
+            <span>Bottle</span>
+          </button>
+        </div>
       )}
 
       <div className="actions actions--diaper">

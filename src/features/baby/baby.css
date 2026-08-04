@@ -61,6 +61,18 @@
   background: var(--surface);
 }
 
+/* While a feed is running the start tiles stay available but recede, so the
+   live card keeps visual priority. */
+.actions--secondary { margin-top: var(--space-3); }
+
+.actions--secondary .action {
+  min-height: 48px;
+  font-size: var(--fs-sm);
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
 /* ---- Diaper quick-log row ---- */
 .actions--diaper {
   grid-template-columns: repeat(3, 1fr);
