@@ -1,68 +1,3 @@
-/* ---- Reset & base ---- */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #0f0f13;
-  --surface: #1a1a22;
-  --surface2: #22222e;
-  --border: #2e2e3e;
-  --accent: #7c6aff;
-  --accent-stop: #ff5a7c;
-  --text: #e8e8f0;
-  --text-muted: #888898;
-  --green: #4cffb0;
-  --warn: #ffb84c;
-  font-size: 16px;
-}
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
-  min-height: 100dvh;
-}
-
-/* ---- App shell ---- */
-.app {
-  max-width: 640px;
-  margin: 0 auto;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  padding: 0 1rem;
-}
-
-.app-header {
-  text-align: center;
-  padding: 1.75rem 0 0.75rem;
-}
-
-.app-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--accent) 0%, #b06aff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.app-subtitle {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 0.2rem;
-}
-
-.app-main { flex: 1; padding-bottom: 2rem; }
-
-.app-footer {
-  text-align: center;
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  padding: 1rem 0;
-  border-top: 1px solid var(--border);
-}
-
 /* ---- Timer button ---- */
 .timer-section {
   display: flex;
@@ -84,7 +19,7 @@ body {
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  border: 2px solid var(--accent-stop);
+  border: 2px solid var(--stop);
   animation: pulse 1.4s ease-out infinite;
   opacity: 0;
 }
@@ -114,15 +49,15 @@ body {
 .timer-btn:active { transform: scale(0.95); }
 
 .timer-btn--start {
-  background: linear-gradient(135deg, var(--accent) 0%, #b06aff 100%);
-  box-shadow: 0 0 30px rgba(124, 106, 255, 0.4);
-  color: #fff;
+  background: var(--accent);
+  box-shadow: var(--shadow-1);
+  color: var(--accent-ink);
 }
 
 .timer-btn--stop {
-  background: linear-gradient(135deg, var(--accent-stop) 0%, #ff8a5a 100%);
-  box-shadow: 0 0 30px rgba(255, 90, 124, 0.5);
-  color: #fff;
+  background: var(--stop);
+  box-shadow: var(--shadow-1);
+  color: var(--accent-ink);
 }
 
 .timer-btn__label { font-size: 1.2rem; letter-spacing: 0.08em; }
@@ -158,7 +93,7 @@ body {
   font-size: 1.8rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--green);
+  color: var(--accent);
 }
 
 .intensity-picker__prompt {
@@ -177,7 +112,7 @@ body {
   height: 44px;
   border-radius: 50%;
   border: 2px solid var(--border);
-  background: var(--surface2);
+  background: var(--surface-2);
   color: var(--text);
   font-size: 1rem;
   font-weight: 700;
@@ -186,7 +121,7 @@ body {
 }
 
 .intensity-btn:hover { border-color: var(--accent); color: var(--accent); }
-.intensity-btn--selected { background: rgba(124,106,255,0.1); }
+.intensity-btn--selected { background: var(--accent-soft); }
 
 .intensity-picker__label {
   text-align: center;
@@ -195,7 +130,7 @@ body {
 }
 
 .intensity-picker__note {
-  background: var(--surface2);
+  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
@@ -232,7 +167,7 @@ body {
 .picker-btn--save {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
 }
 .picker-btn--save:hover { opacity: 0.85; }
 
@@ -310,40 +245,12 @@ body {
 
 .alert-511 {
   margin-top: 0.75rem;
-  background: rgba(255, 184, 76, 0.1);
-  border: 1px solid var(--warn);
+  background: var(--surface-2);
+  border: 1px solid var(--amber);
   border-radius: 10px;
   padding: 0.65rem 1rem;
   font-size: 0.82rem;
-  color: var(--warn);
-}
-
-/* ---- Tab bar ---- */
-.tab-bar {
-  display: flex;
-  gap: 0.5rem;
-  border-bottom: 1px solid var(--border);
-  margin: 0.5rem 0 0;
-}
-
-.tab-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-  font-weight: 500;
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: all 0.15s;
-}
-
-.tab-btn:hover { color: var(--text); }
-
-.tab-btn--active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+  color: var(--amber);
 }
 
 /* ---- Graph ---- */
@@ -444,6 +351,8 @@ body {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .action-btn {
@@ -457,7 +366,26 @@ body {
   transition: all 0.15s;
 }
 
-.action-btn:hover { border-color: var(--green); color: var(--green); }
+.action-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Import is a <label> wrapping a hidden file input, so it needs the button's
+   box model spelled out rather than inherited from the <button> defaults. */
+label.action-btn {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.35;
+}
+
+.history-notice {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2, transparent);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
 
 .reset-btn {
   background: transparent;
@@ -470,8 +398,8 @@ body {
   transition: all 0.15s;
 }
 
-.reset-btn:hover { border-color: var(--accent-stop); color: var(--accent-stop); }
-.reset-btn--confirm { border-color: var(--accent-stop); color: var(--accent-stop); background: rgba(255,90,124,0.08); }
+.reset-btn:hover { border-color: var(--stop); color: var(--stop); }
+.reset-btn--confirm { border-color: var(--stop); color: var(--stop); background: var(--stop-soft); }
 
 /* ---- Contraction list ---- */
 .list-empty {
@@ -494,7 +422,7 @@ body {
   grid-template-columns: 2rem 1fr 5rem 5.5rem 8rem 2rem;
   gap: 0.4rem;
   padding: 0.55rem 0.85rem;
-  background: var(--surface2);
+  background: var(--surface-2);
   font-size: 0.62rem;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -511,8 +439,8 @@ body {
   transition: background 0.1s;
 }
 
-.list-row:hover { background: var(--surface2); }
-.list-row--latest { background: rgba(124, 106, 255, 0.05); }
+.list-row:hover { background: var(--surface-2); }
+.list-row--latest { background: var(--accent-soft); }
 
 .list-row__num { color: var(--text-muted); font-size: 0.78rem; }
 
@@ -523,7 +451,7 @@ body {
 }
 
 .list-row__date { font-size: 0.68rem; color: var(--text-muted); }
-.list-row__dur { font-size: 0.88rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--green); }
+.list-row__dur { font-size: 0.88rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--accent); }
 .list-row__gap { font-size: 0.78rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .list-row__first { font-style: italic; font-size: 0.72rem; }
 
@@ -536,7 +464,7 @@ body {
   border-radius: 50%;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #000;
+  color: var(--accent-ink);
 }
 
 .intensity-dot--none { background: transparent; color: var(--text-muted); width: auto; height: auto; font-size: 0.8rem; }
@@ -552,7 +480,7 @@ body {
   transition: color 0.1s;
 }
 
-.list-row__del:hover { color: var(--accent-stop); }
+.list-row__del:hover { color: var(--stop); }
 
 /* Note row spans full width below the grid */
 .list-row__note-row {
@@ -583,7 +511,7 @@ body {
 
 .list-row__note-edit input {
   flex: 1;
-  background: var(--surface2);
+  background: var(--surface-2);
   border: 1px solid var(--accent);
   border-radius: 6px;
   color: var(--text);
@@ -619,7 +547,7 @@ body {
 
 /* ---- Intensity select ---- */
 .intensity-select {
-  background: var(--surface2);
+  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text-muted);

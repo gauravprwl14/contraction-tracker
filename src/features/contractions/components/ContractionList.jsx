@@ -1,14 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { formatDuration, formatTime, formatDate } from '../utils/format';
+import { formatDuration, formatTime, formatDate } from '../../../utils/format';
 
 const PAGE_SIZE = 30;
 
 const INTENSITY_COLORS = {
-  1: '#4cffb0',
-  2: '#4cffb0',
-  3: '#ffe44c',
-  4: '#ffb84c',
-  5: '#ff5a7c',
+  1: 'var(--accent)',
+  2: 'var(--accent)',
+  3: 'var(--amber)',
+  4: 'var(--amber)',
+  5: 'var(--stop)',
 };
 
 const ContractionRow = React.memo(function ContractionRow({
@@ -43,7 +43,7 @@ const ContractionRow = React.memo(function ContractionRow({
     [c.id, onUpdate]
   );
 
-  const selectColor = c.intensity ? INTENSITY_COLORS[c.intensity] : '#888898';
+  const selectColor = c.intensity ? INTENSITY_COLORS[c.intensity] : 'var(--text-muted)';
 
   return (
     <div className={`list-row${isLatest ? ' list-row--latest' : ''}`}>

@@ -1,4 +1,4 @@
-import { formatDuration } from '../utils/format';
+import { formatDuration } from '../../../utils/format';
 
 export function TimerButton({ isActive, elapsed, onStart, onStop }) {
   return (

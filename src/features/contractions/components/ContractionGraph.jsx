@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { formatTime } from '../utils/format';
+import { formatTime } from '../../../utils/format';
 
 // Layout constants
 const BAR_W    = 38;   // fixed bar width px
@@ -12,12 +12,11 @@ const R_PAD    = 20;   // right margin
 const AXIS_Y   = TOP_PAD + CHART_H; // pixel Y where the axis sits
 
 const REF_LINES = [
-  { secs: 45, color: '#4cffb0', dash: '4 3', label: '45s' },
-  { secs: 60, color: '#ffe44c', dash: '4 3', label: '1m' },
+  { secs: 45, color: 'var(--accent)', dash: '4 3', label: '45s' },
+  { secs: 60, color: 'var(--amber)', dash: '4 3', label: '1m' },
 ];
 
-const INTENSITY_COLORS = ['#7c6aff', '#7c6aff', '#4cffb0', '#ffe44c', '#ffb84c', '#ff5a7c'];
-const INTENSITY_LABELS = ['Unrated','Unrated','Mild','Moderate','Strong','Intense'];
+const INTENSITY_COLORS = ['var(--accent)', 'var(--accent)', 'var(--accent)', 'var(--amber)', 'var(--amber)', 'var(--stop)'];
 
 function fmtShort(s) {
   if (s == null) return '';
@@ -27,7 +26,7 @@ function fmtShort(s) {
 }
 
 export function ContractionGraph({ contractions, intervals, isActive, elapsed }) {
-  const { bars, yGridLines, yMaxRounded, svgW, svgH, visibleIntervals, chronVisible } =
+  const { bars, yGridLines, yMaxRounded, svgW, svgH, visibleIntervals } =
     useMemo(() => {
       const MAX_BARS = 20;
       // chronological order oldest→newest
@@ -66,7 +65,7 @@ export function ContractionGraph({ contractions, intervals, isActive, elapsed })
       const intervalsChron = [...intervals].reverse();
       const visibleIntervals = intervalsChron.slice(-Math.max(0, chronVisible.length - 1));
 
-      return { bars, yGridLines, yMaxRounded, svgW, svgH, visibleIntervals, chronVisible };
+      return { bars, yGridLines, yMaxRounded, svgW, svgH, visibleIntervals };
     }, [contractions, intervals, isActive, elapsed]);
 
   if (contractions.length === 0) {
@@ -108,9 +107,9 @@ export function ContractionGraph({ contractions, intervals, isActive, elapsed })
             <g key={secs}>
               <line
                 x1={Y_PAD - 6} y1={y} x2={svgW - R_PAD} y2={y}
-                stroke="#2e2e3e" strokeWidth={secs === 0 ? 1.5 : 0.75}
+                stroke="var(--border)" strokeWidth={secs === 0 ? 1.5 : 0.75}
               />
-              <text x={Y_PAD - 10} y={y + 4} textAnchor="end" fontSize="10" fill="#555570">
+              <text x={Y_PAD - 10} y={y + 4} textAnchor="end" fontSize="10" fill="var(--text-muted)">
                 {fmtShort(secs)}
               </text>
             </g>
@@ -135,13 +134,13 @@ export function ContractionGraph({ contractions, intervals, isActive, elapsed })
           {/* ── Trend line connecting bar tops ── */}
           {bars.length >= 2 && (() => {
             const points = bars
-              .map(({ x, y, barH }) => `${x + BAR_W / 2},${y}`)
+              .map(({ x, y }) => `${x + BAR_W / 2},${y}`)
               .join(' ');
             return (
               <polyline
                 points={points}
                 fill="none"
-                stroke="#7c6aff"
+                stroke="var(--accent)"
                 strokeWidth="1.5"
                 strokeDasharray="3 3"
                 opacity="0.35"
@@ -168,7 +167,7 @@ export function ContractionGraph({ contractions, intervals, isActive, elapsed })
               {barH >= 28 ? (
                 <text
                   x={x + BAR_W / 2} y={y + barH / 2 + 4}
-                  textAnchor="middle" fontSize="10" fontWeight="700" fill="#000" opacity="0.8"
+                  textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--accent-ink)" opacity="0.8"
                 >
                   {fmtShort(c.duration)}
                 </text>
@@ -184,14 +183,14 @@ export function ContractionGraph({ contractions, intervals, isActive, elapsed })
               {/* X-axis: contraction number */}
               <text
                 x={x + BAR_W / 2} y={AXIS_Y + 16}
-                textAnchor="middle" fontSize="11" fontWeight="600" fill="#aaaacc"
+                textAnchor="middle" fontSize="11" fontWeight="600" fill="var(--text)"
               >
                 #{num}
               </text>
               {/* X-axis: time */}
               <text
                 x={x + BAR_W / 2} y={AXIS_Y + 30}
-                textAnchor="middle" fontSize="9" fill="#555570"
+                textAnchor="middle" fontSize="9" fill="var(--text-muted)"
               >
                 {formatTime(c.startTime).slice(0, -3)}
               </text>
@@ -210,11 +209,11 @@ export function ContractionGraph({ contractions, intervals, isActive, elapsed })
                 <line
                   x1={leftBar.x + BAR_W} y1={AXIS_Y + 44}
                   x2={rightBar.x}         y2={AXIS_Y + 44}
-                  stroke="#333348" strokeWidth="1" strokeDasharray="2 2"
+                  stroke="var(--border)" strokeWidth="1" strokeDasharray="2 2"
                 />
                 <text
                   x={midX} y={AXIS_Y + 55}
-                  textAnchor="middle" fontSize="9" fill="#7c6aff" opacity="0.85"
+                  textAnchor="middle" fontSize="9" fill="var(--accent)" opacity="0.85"
                 >
                   ↔ {fmtShort(gapSec)}
                 </text>
@@ -229,19 +228,19 @@ export function ContractionGraph({ contractions, intervals, isActive, elapsed })
                 x={activeBarX} y={AXIS_Y - activeBarH}
                 width={BAR_W} height={activeBarH}
                 rx="5" ry="5"
-                fill="#7c6aff" opacity="0.55"
+                fill="var(--accent)" opacity="0.55"
               >
                 <animate attributeName="opacity" values="0.3;0.65;0.3" dur="1s" repeatCount="indefinite" />
               </rect>
               <text
                 x={activeBarX + BAR_W / 2} y={AXIS_Y - activeBarH - 6}
-                textAnchor="middle" fontSize="10" fill="#7c6aff"
+                textAnchor="middle" fontSize="10" fill="var(--accent)"
               >
                 {fmtShort(activeDur)}
               </text>
               <text
                 x={activeBarX + BAR_W / 2} y={AXIS_Y + 16}
-                textAnchor="middle" fontSize="10" fill="#7c6aff"
+                textAnchor="middle" fontSize="10" fill="var(--accent)"
               >
                 now
               </text>
@@ -253,12 +252,12 @@ export function ContractionGraph({ contractions, intervals, isActive, elapsed })
       {/* Legend */}
       <div className="graph-footer">
         <div className="graph-ref-legend">
-          <span style={{ color: '#4cffb0' }}>— 45s</span>
-          <span style={{ color: '#ffe44c' }}>— 1m</span>
-          <span style={{ color: '#7c6aff', opacity: 0.5 }}>--- trend</span>
+          <span style={{ color: 'var(--accent)' }}>— 45s</span>
+          <span style={{ color: 'var(--amber)' }}>— 1m</span>
+          <span style={{ color: 'var(--accent)', opacity: 0.5 }}>--- trend</span>
         </div>
         <div className="graph-intensity-legend">
-          {[['#7c6aff','Unrated'],['#4cffb0','Mild'],['#ffe44c','Moderate'],['#ffb84c','Strong'],['#ff5a7c','Intense']].map(([c,l]) => (
+          {[['var(--accent)','Unrated'],['var(--accent)','Mild'],['var(--amber)','Moderate'],['var(--amber)','Strong'],['var(--stop)','Intense']].map(([c,l]) => (
             <span key={l} style={{ color: c }}>■ {l}</span>
           ))}
         </div>
