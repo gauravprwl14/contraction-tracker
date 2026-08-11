@@ -197,4 +197,47 @@ describe('isDefaultFilter', () => {
     expect(isDefaultFilter({ ...DEFAULT_FILTER, q: 'x' })).toBe(false);
     expect(isDefaultFilter({ ...DEFAULT_FILTER, range: { preset: 'all' } })).toBe(false);
   });
+
+  it('types a growth entry as growth and a dose as medicine', () => {
+    expect(entryTypes({ kind: 'growth', item: { weightKg: 4 } })).toEqual(['growth']);
+    expect(entryTypes({ kind: 'medicine', item: { name: 'X' } })).toEqual(['medicine']);
+  });
+
+  it('filters the log down to medicine doses', () => {
+    const entries = [
+      { kind: 'medicine', time: 1, item: { name: 'Paracetamol', note: '' } },
+      { kind: 'diaper', time: 2, item: { pee: true, poop: false, note: '' } },
+    ];
+    const filter = { ...DEFAULT_FILTER, range: { preset: 'all' }, types: ['medicine'] };
+    const out = applyFilters(entries, filter, 3);
+    expect(out).toHaveLength(1);
+    expect(out[0].kind).toBe('medicine');
+  });
+
+  it('filters the log down to growth measurements', () => {
+    const entries = [
+      { kind: 'growth', time: 1, item: { weightKg: 4, note: '' } },
+      { kind: 'medicine', time: 2, item: { name: 'X', note: '' } },
+    ];
+    const filter = { ...DEFAULT_FILTER, range: { preset: 'all' }, types: ['growth'] };
+    expect(applyFilters(entries, filter, 3).map((e) => e.kind)).toEqual(['growth']);
+  });
+
+  it('keeps growth and medicine entries when no type filter is set', () => {
+    const entries = [
+      { kind: 'growth', time: 1, item: { note: '' } },
+      { kind: 'medicine', time: 2, item: { note: '' } },
+    ];
+    const filter = { ...DEFAULT_FILTER, range: { preset: 'all' } };
+    expect(applyFilters(entries, filter, 3)).toHaveLength(2);
+  });
+
+  it('searches notes on the new kinds too', () => {
+    const entries = [
+      { kind: 'medicine', time: 1, item: { name: 'X', note: 'after the jab' } },
+      { kind: 'growth', time: 2, item: { note: 'clinic visit' } },
+    ];
+    const filter = { ...DEFAULT_FILTER, range: { preset: 'all' }, q: 'clinic' };
+    expect(applyFilters(entries, filter, 3).map((e) => e.kind)).toEqual(['growth']);
+  });
 });

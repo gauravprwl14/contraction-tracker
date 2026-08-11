@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNow } from '../../hooks/useNow';
 import { useFeedStore } from './hooks/useFeedStore';
 import { useDiaperStore } from './hooks/useDiaperStore';
+import { useGrowthStore } from './hooks/useGrowthStore';
+import { useMedicineStore } from './hooks/useMedicineStore';
 import { HomeScreen } from './screens/HomeScreen';
 import { ChartsScreen } from './screens/ChartsScreen';
 import { LogScreen } from './screens/LogScreen';
@@ -11,7 +13,9 @@ import { BottleSheet } from './session/BottleSheet';
 import { decideStart } from './session/sessionGuard';
 import { Toast } from './components/Toast';
 import { EditSheet } from './components/EditSheet';
-import { buildBackup, parseBackup, feedsToCsv, diapersToCsv, download } from './backup';
+import {
+  buildBackup, parseBackup, feedsToCsv, diapersToCsv, growthToCsv, medicineToCsv, download,
+} from './backup';
 import { Icon } from './icons/Icon';
 import './baby.css';
 
@@ -26,6 +30,8 @@ export default function BabyApp() {
   const now = useNow(liveHint);
   const feedStore = useFeedStore(now);
   const diaperStore = useDiaperStore(now);
+  const growthStore = useGrowthStore(now);
+  const medicineStore = useMedicineStore(now);
   const [tab, setTab] = useState('home');
   const [toast, setToast] = useState(null);
   const [editing, setEditing] = useState(null);
@@ -77,7 +83,10 @@ export default function BabyApp() {
   const handleExportJson = () => download(
     `baby-tracker-${today()}.json`,
     JSON.stringify(
-      buildBackup(feedStore.feeds, diaperStore.diapers, feedStore.quantityPresets),
+      buildBackup(
+        feedStore.feeds, diaperStore.diapers, feedStore.quantityPresets,
+        growthStore.measurements, medicineStore.doses
+      ),
       null,
       2
     ),
@@ -90,6 +99,12 @@ export default function BabyApp() {
   const handleExportDiapersCsv = () =>
     download(`baby-diapers-${today()}.csv`, diapersToCsv(diaperStore.diapers), 'text/csv');
 
+  const handleExportGrowthCsv = () =>
+    download(`baby-growth-${today()}.csv`, growthToCsv(growthStore.measurements), 'text/csv');
+
+  const handleExportMedicineCsv = () =>
+    download(`baby-medicine-${today()}.csv`, medicineToCsv(medicineStore.doses), 'text/csv');
+
   const handleImport = async (file) => {
     let data;
     try {
@@ -98,15 +113,31 @@ export default function BabyApp() {
       setToast({ message: err.message });
       return;
     }
-    const total = data.feeds.length + data.diapers.length;
+    const total = data.feeds.length + data.diapers.length
+      + data.growth.length + data.medicine.length;
     if (!window.confirm(
-      `Replace all local data with ${data.feeds.length} feeds and ${data.diapers.length} diapers from this backup? This cannot be undone.`
+      `Replace all local data with ${data.feeds.length} feeds, ${data.diapers.length} diapers, ${data.growth.length} measurements and ${data.medicine.length} medicine doses from this backup? This cannot be undone.`
     )) return;
     feedStore.replaceAll(data.feeds);
     diaperStore.replaceAll(data.diapers);
+    growthStore.replaceAll(data.growth);
+    medicineStore.replaceAll(data.medicine);
     if (data.presets.length) feedStore.setQuantityPresets(data.presets);
     setToast({ message: `Imported ${total} records` });
   };
+
+  const handleLogGrowth = () => setEditing({
+    kind: 'growth', isNew: true,
+    item: { id: 'new', time: Date.now(), note: '' },
+  });
+
+  const handleLogMedicine = () => setEditing({
+    kind: 'medicine', isNew: true,
+    item: {
+      id: 'new', time: Date.now(), name: medicineStore.recentNames[0] ?? '',
+      amount: undefined, unit: 'ml', note: '',
+    },
+  });
 
   // Tapping "Breast" only arms the card — the timer starts when a side is
   // tapped, so a side is never chosen on the user's behalf. A bottle has no
@@ -158,23 +189,34 @@ export default function BabyApp() {
           onPickSide={handlePickSide}
           onCancelArm={() => setArmed(false)}
           onLogDiaper={handleLogDiaper}
+          onLogGrowth={handleLogGrowth}
+          onLogMedicine={handleLogMedicine}
           onEdit={(kind, item) => setEditing({ kind, item })}
           onEditStale={handleEditStale}
           onSaved={handleSaved}
         />
       )}
       {tab === 'charts' && (
-        <ChartsScreen feedStore={feedStore} diaperStore={diaperStore} now={now} />
+        <ChartsScreen
+          feedStore={feedStore}
+          diaperStore={diaperStore}
+          growthStore={growthStore}
+          now={now}
+        />
       )}
       {tab === 'log' && (
         <LogScreen
           feedStore={feedStore}
           diaperStore={diaperStore}
+          growthStore={growthStore}
+          medicineStore={medicineStore}
           now={now}
           onEdit={(kind, item) => setEditing({ kind, item })}
           onExportJson={handleExportJson}
           onExportFeedsCsv={handleExportFeedsCsv}
           onExportDiapersCsv={handleExportDiapersCsv}
+          onExportGrowthCsv={handleExportGrowthCsv}
+          onExportMedicineCsv={handleExportMedicineCsv}
           onImport={handleImport}
         />
       )}
@@ -190,15 +232,33 @@ export default function BabyApp() {
             if (editing.stale) {
               feedStore.addFeed({ ...next, id: crypto.randomUUID() });
               feedStore.discardActive();
+            } else if (editing.isNew) {
+              const entry = { ...next, id: crypto.randomUUID() };
+              if (editing.kind === 'growth') {
+                growthStore.addMeasurement(entry);
+                setToast({ message: 'Measurement saved', onUndo: growthStore.undoLast });
+              } else {
+                medicineStore.addDose(entry);
+                setToast({ message: `${entry.name} logged`, onUndo: medicineStore.undoLast });
+              }
             } else if (editing.kind === 'feed') {
               feedStore.updateFeed(next.id, next);
+            } else if (editing.kind === 'growth') {
+              growthStore.updateMeasurement(next.id, next);
+            } else if (editing.kind === 'medicine') {
+              medicineStore.updateDose(next.id, next);
             } else {
               diaperStore.updateDiaper(next.id, next);
             }
           }}
           onDelete={(id) => {
+            // A record that was never saved has nothing to delete; the button
+            // just discards the draft.
+            if (editing.isNew) return;
             if (editing.stale) feedStore.discardActive();
             else if (editing.kind === 'feed') feedStore.deleteFeed(id);
+            else if (editing.kind === 'growth') growthStore.deleteMeasurement(id);
+            else if (editing.kind === 'medicine') medicineStore.deleteDose(id);
             else diaperStore.deleteDiaper(id);
           }}
           onClose={() => setEditing(null)}

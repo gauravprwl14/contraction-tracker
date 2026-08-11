@@ -35,6 +35,8 @@ export function rangeBounds(range, now) {
 }
 
 export function entryTypes(entry) {
+  if (entry.kind === 'growth') return ['growth'];
+  if (entry.kind === 'medicine') return ['medicine'];
   if (entry.kind === 'diaper') {
     const types = [];
     if (entry.item.pee) types.push('pee');

@@ -8,6 +8,8 @@ const TYPES = [
   { id: 'bottle', label: 'Bottle' },
   { id: 'pee', label: 'Pee' },
   { id: 'poop', label: 'Poop' },
+  { id: 'medicine', label: 'Medicine' },
+  { id: 'growth', label: 'Growth' },
 ];
 
 const SIDES = [

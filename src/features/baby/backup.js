@@ -2,8 +2,14 @@ import { formatDate, formatTime } from '../../utils/format';
 import { toCsv, download } from '../../utils/csv';
 import { feedDurationMs } from './feedLogic';
 
-export function buildBackup(feeds, diapers, presets) {
-  return { version: 1, exportedAt: Date.now(), feeds, diapers, presets };
+export const BACKUP_VERSION = 2;
+
+export function buildBackup(feeds, diapers, presets, growth = [], medicine = []) {
+  return {
+    version: BACKUP_VERSION,
+    exportedAt: Date.now(),
+    feeds, diapers, presets, growth, medicine,
+  };
 }
 
 export function parseBackup(text) {
@@ -16,10 +22,15 @@ export function parseBackup(text) {
   if (!parsed || !Array.isArray(parsed.feeds) || !Array.isArray(parsed.diapers)) {
     throw new Error('That file is not a baby tracker backup.');
   }
+  // v1 backups predate growth and medicine, so both default to empty rather
+  // than failing the import — the same treatment presets already gets.
+  const list = (v) => (Array.isArray(v) ? v : []);
   return {
     feeds: parsed.feeds,
     diapers: parsed.diapers,
-    presets: Array.isArray(parsed.presets) ? parsed.presets : [],
+    presets: list(parsed.presets),
+    growth: list(parsed.growth),
+    medicine: list(parsed.medicine),
   };
 }
 
@@ -51,6 +62,24 @@ export function diapersToCsv(diapers) {
     formatDate(d.time), formatTime(d.time),
     d.pee ? 'yes' : 'no', d.poop ? 'yes' : 'no',
     d.color ?? '', d.consistency ?? '', d.amount ?? '', d.note ?? '',
+  ]);
+  return toCsv(header, rows);
+}
+
+export function growthToCsv(measurements) {
+  const header = ['Date', 'Time', 'Weight (kg)', 'Height (cm)', 'Head (cm)', 'Note'];
+  const rows = measurements.map((m) => [
+    formatDate(m.time), formatTime(m.time),
+    m.weightKg ?? '', m.heightCm ?? '', m.headCm ?? '', m.note ?? '',
+  ]);
+  return toCsv(header, rows);
+}
+
+export function medicineToCsv(doses) {
+  const header = ['Date', 'Time', 'Medicine', 'Amount', 'Unit', 'Note'];
+  const rows = doses.map((d) => [
+    formatDate(d.time), formatTime(d.time),
+    d.name, d.amount ?? '', d.unit ?? '', d.note ?? '',
   ]);
   return toCsv(header, rows);
 }
