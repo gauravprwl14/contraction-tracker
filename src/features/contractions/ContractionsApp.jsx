@@ -4,30 +4,9 @@ import { TimerButton } from './components/TimerButton';
 import { StatsBar } from './components/StatsBar';
 import { ContractionGraph } from './components/ContractionGraph';
 import { ContractionList } from './components/ContractionList';
-import { formatTime, formatDate } from '../../utils/format';
+import { buildBackup, parseBackup, contractionsToCsv } from './backup';
+import { download } from '../../utils/csv';
 import './contractions.css';
-
-function exportCSV(contractions, intervals) {
-  const header = ['#', 'Date', 'Start Time', 'End Time', 'Duration (s)', 'Gap Before (s)', 'Intensity', 'Note'];
-  const rows = contractions.map((c, i) => [
-    contractions.length - i,
-    formatDate(c.startTime),
-    formatTime(c.startTime),
-    formatTime(c.endTime),
-    c.duration,
-    intervals[i] ?? '',
-    c.intensity ?? '',
-    c.note ? `"${c.note.replace(/"/g, '""')}"` : '',
-  ]);
-  const csv = [header, ...rows].map((r) => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `contractions-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 export default function ContractionsApp() {
   const {
@@ -36,11 +15,45 @@ export default function ContractionsApp() {
     intervals, timeSinceLast, is511,
     durationTrend, intervalTrend, laborStage, perHour, sessionDuration,
     startContraction, stopContraction,
-    updateContraction, deleteContraction, reset,
+    updateContraction, deleteContraction, replaceAll, reset,
   } = useContractionStore();
 
   const [confirmReset, setConfirmReset] = useState(false);
   const [activeTab, setActiveTab] = useState('graph'); // 'graph' | 'history'
+  const [notice, setNotice] = useState(null);
+
+  const stamp = () => new Date().toISOString().slice(0, 10);
+
+  const handleExportJson = () => download(
+    `contractions-${stamp()}.json`,
+    JSON.stringify(buildBackup(contractions), null, 2),
+    'application/json'
+  );
+
+  const handleExportCsv = () => download(
+    `contractions-${stamp()}.csv`,
+    contractionsToCsv(contractions, intervals),
+    'text/csv'
+  );
+
+  const handleImport = async (file) => {
+    let data;
+    try {
+      data = parseBackup(await file.text());
+    } catch (err) {
+      setNotice(err.message);
+      return;
+    }
+    if (!window.confirm(
+      `Replace all local data with ${data.contractions.length} contractions from this backup? This cannot be undone.`
+    )) return;
+    replaceAll(data.contractions);
+    setNotice(
+      data.skipped > 0
+        ? `Imported ${data.contractions.length} contractions · skipped ${data.skipped} unreadable`
+        : `Imported ${data.contractions.length} contractions`
+    );
+  };
 
   const handleReset = () => {
     if (contractions.length === 0 && !isActive) return;
@@ -105,10 +118,28 @@ export default function ContractionsApp() {
             <span />
             <div className="history-actions">
               {contractions.length > 0 && (
-                <button className="action-btn" onClick={() => exportCSV(contractions, intervals)}>
-                  Export CSV
-                </button>
+                <>
+                  <button className="action-btn" onClick={handleExportJson}>
+                    Backup (JSON)
+                  </button>
+                  <button className="action-btn" onClick={handleExportCsv}>
+                    Export CSV
+                  </button>
+                </>
               )}
+              <label className="action-btn">
+                Import
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImport(file);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
               {(contractions.length > 0 || isActive) && (
                 <button
                   className={`reset-btn ${confirmReset ? 'reset-btn--confirm' : ''}`}
@@ -119,6 +150,11 @@ export default function ContractionsApp() {
               )}
             </div>
           </div>
+          {notice && (
+            <p className="history-notice" role="status" onClick={() => setNotice(null)}>
+              {notice}
+            </p>
+          )}
           <ContractionList
             contractions={contractions}
             intervals={intervals}

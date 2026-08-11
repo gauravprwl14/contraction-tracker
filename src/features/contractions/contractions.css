@@ -351,6 +351,8 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .action-btn {
@@ -365,6 +367,25 @@
 }
 
 .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Import is a <label> wrapping a hidden file input, so it needs the button's
+   box model spelled out rather than inherited from the <button> defaults. */
+label.action-btn {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.35;
+}
+
+.history-notice {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2, transparent);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
 
 .reset-btn {
   background: transparent;
