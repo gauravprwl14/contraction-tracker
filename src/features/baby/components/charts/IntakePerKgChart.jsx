@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { dailyFeedTotals } from '../../feedLogic';
 import { dailyIntakePerKg, latestMeasurement } from '../../growthLogic';
 import { formatDate } from '../../../../utils/format';
+import { endOfDay } from '../../../../utils/dates';
 
 const W = 1000;
 const H = 280;
@@ -11,11 +11,11 @@ const PAD = 34;
 // Intake per kg per day. The number a paediatrician reaches for first, and the
 // reason the growth tracker has to exist: without a weight it cannot be shown
 // at all, and a guessed weight would be worse than an honest gap.
-export function IntakePerKgChart({ feeds, measurements, now }) {
-  const [days, setDays] = useState(7);
-
-  const rows = dailyIntakePerKg(dailyFeedTotals(feeds, now, days), measurements);
-  const weighIn = latestMeasurement(measurements, 'weightKg', now);
+export function IntakePerKgChart({ feeds, measurements, anchor, days }) {
+  const rows = dailyIntakePerKg(dailyFeedTotals(feeds, anchor, days), measurements);
+  // The weight shown is the one known by the end of the range, not today's, so
+  // a past range is not annotated with a weight taken after it.
+  const weighIn = latestMeasurement(measurements, 'weightKg', endOfDay(anchor));
   const values = rows.map((r) => r.mlPerKg).filter((v) => v != null);
   // A day with a weight but no feeds yields 0, not null, so emptiness has to be
   // judged on intake rather than on the computed ratio.
@@ -41,20 +41,7 @@ export function IntakePerKgChart({ feeds, measurements, now }) {
 
   return (
     <div className="chart">
-      <div className="chart__head">
-        <h3 className="chart__title">Intake per kg per day</h3>
-        <div className="chip-row">
-          {[7, 14].map((d) => (
-            <button
-              key={d}
-              className={`chip chip--sm ${days === d ? 'chip--active' : ''}`}
-              onClick={() => setDays(d)}
-            >
-              {d}d
-            </button>
-          ))}
-        </div>
-      </div>
+      <h3 className="chart__title">Intake per kg per day</h3>
 
       <p className="chart__caption">
         Using weight {weighIn.weightKg} kg, measured {formatDate(weighIn.time)}.

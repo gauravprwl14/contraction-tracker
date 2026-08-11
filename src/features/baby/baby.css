@@ -954,3 +954,41 @@
 .poop-card--long .poop-card__label { color: var(--amber); }
 
 .poop-card--none .poop-card__value { color: var(--text-muted); }
+
+/* One date range for every chart on the screen. */
+.chart-range {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.chart-range__dates {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.chart-range__dates label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.chart-range__dates input {
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+}
+
+.chart-range__note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--amber);
+}
