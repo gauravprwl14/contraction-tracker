@@ -5,7 +5,7 @@ import { IntakePerKgChart } from './IntakePerKgChart';
 import { GrowthChart } from './GrowthChart';
 
 const at = (y, m, d, h = 0) => new Date(y, m - 1, d, h, 0, 0, 0).getTime();
-const NOW = at(2026, 8, 6, 12);
+const RANGE = { anchor: at(2026, 8, 6), days: 7 };
 
 const render = (C, props) => renderToStaticMarkup(createElement(C, props));
 
@@ -17,14 +17,14 @@ const feed = {
 
 describe('IntakePerKgChart', () => {
   it('asks for a weight instead of guessing one', () => {
-    const html = render(IntakePerKgChart, { feeds: [feed], measurements: [], now: NOW });
+    const html = render(IntakePerKgChart, { feeds: [feed], measurements: [], ...RANGE });
     expect(html).toContain('Log a weight');
     expect(html).not.toContain('NaN');
   });
 
   it('states the weight it used and when it was measured', () => {
     const html = render(IntakePerKgChart, {
-      feeds: [feed], measurements: [measurement], now: NOW,
+      feeds: [feed], measurements: [measurement], ...RANGE,
     });
     expect(html).toContain('4 kg');
     expect(html).toContain('ml/kg/day');
@@ -32,7 +32,7 @@ describe('IntakePerKgChart', () => {
   });
 
   it('renders with a weight but no feeds', () => {
-    const html = render(IntakePerKgChart, { feeds: [], measurements: [measurement], now: NOW });
+    const html = render(IntakePerKgChart, { feeds: [], measurements: [measurement], ...RANGE });
     expect(html).toContain('No feeds recorded');
     expect(html).not.toContain('NaN');
   });

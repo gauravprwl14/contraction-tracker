@@ -14,14 +14,13 @@ const SERIES = [
   { id: 'poopCount', label: 'Poop', color: 'var(--stop)' },
 ];
 
-export function DailyTotalsChart({ feeds, diapers, now }) {
-  const [days, setDays] = useState(7);
+export function DailyTotalsChart({ feeds, diapers, anchor, days }) {
   const [active, setActive] = useState(['feedCount', 'totalMl']);
 
-  // `now` comes from the ticking store clock rather than Date.now() here, since
-  // calling Date.now() during render trips react-hooks/purity.
-  const feedRows = dailyFeedTotals(feeds, now, days);
-  const diaperRows = dailyDiaperTotals(diapers, now, days);
+  // Anchored to the end of the screen's date range rather than to Date.now(),
+  // which would also trip react-hooks/purity by being called during render.
+  const feedRows = dailyFeedTotals(feeds, anchor, days);
+  const diaperRows = dailyDiaperTotals(diapers, anchor, days);
 
   const rows = feedRows.map((r, i) => ({
     key: r.key,
@@ -46,16 +45,7 @@ export function DailyTotalsChart({ feeds, diapers, now }) {
 
   return (
     <div className="chart">
-      <div className="chart__head">
-        <h3 className="chart__title">Daily totals</h3>
-        <div className="chip-row">
-          {[7, 14].map((d) => (
-            <button key={d} className={`chip chip--sm ${days === d ? 'chip--active' : ''}`} onClick={() => setDays(d)}>
-              {d}d
-            </button>
-          ))}
-        </div>
-      </div>
+      <h3 className="chart__title">Daily totals</h3>
 
       <div className="chip-row chip-row--series">
         {SERIES.map((s) => (
