@@ -10,6 +10,12 @@ export function HomeScreen({
 }) {
   const { active, suggestion, lastFeed, msSinceLastFeed, todayStats } = feedStore;
   const diaperToday = diaperStore.todayStats;
+  const poopDays = diaperStore.daysSinceLastPoop;
+
+  const poopTone = poopDays === null ? 'none' : poopDays === 0 ? 'today' : poopDays >= 3 ? 'long' : 'ok';
+  const poopLabel = poopDays === null
+    ? 'No poop logged yet'
+    : `${poopDays === 1 ? 'day' : 'days'} since last poop`;
 
   const recent = [
     ...feedStore.feeds.slice(0, 8).map((f) => ({ kind: 'feed', time: f.startTime, item: f })),
@@ -77,6 +83,12 @@ export function HomeScreen({
         <button className="action action--sm" onClick={() => onLogDiaper({ pee: true, poop: true })}>
           Both
         </button>
+      </div>
+
+      <div className={`poop-card poop-card--${poopTone}`}>
+        <span className="poop-card__icon"><Icon name="poop" size={22} /></span>
+        <span className="poop-card__value">{poopDays === null ? '—' : poopDays}</span>
+        <span className="poop-card__label">{poopLabel}</span>
       </div>
 
       <p className="today-summary">

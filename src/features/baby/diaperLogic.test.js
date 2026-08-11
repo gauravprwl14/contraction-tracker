@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  createDiaper, todayDiaperStats, dailyDiaperTotals, msSinceLastPoop,
+  createDiaper, todayDiaperStats, dailyDiaperTotals, msSinceLastPoop, daysSinceLastPoop,
 } from './diaperLogic';
 
 const MIN = 60000;
@@ -48,5 +48,40 @@ describe('diaperLogic', () => {
 
   it('returns null when there has never been a poop', () => {
     expect(msSinceLastPoop([], at(2026, 8, 3))).toBeNull();
+  });
+
+  it('reports no poop-free day count when nothing has been logged', () => {
+    expect(daysSinceLastPoop([], at(2026, 8, 3, 9))).toBe(null);
+    expect(daysSinceLastPoop([{ poop: false, time: at(2026, 8, 3, 1) }], at(2026, 8, 3, 9))).toBe(null);
+  });
+
+  it('counts a poop earlier today as zero days', () => {
+    const diapers = [{ poop: true, time: at(2026, 8, 3, 2, 30) }];
+    expect(daysSinceLastPoop(diapers, at(2026, 8, 3, 23, 45))).toBe(0);
+  });
+
+  it('counts last night as one day rather than rounding elapsed hours to zero', () => {
+    const diapers = [{ poop: true, time: at(2026, 8, 2, 23, 30) }];
+    expect(daysSinceLastPoop(diapers, at(2026, 8, 3, 1, 0))).toBe(1);
+  });
+
+  it('counts multiple calendar days', () => {
+    const diapers = [{ poop: true, time: at(2026, 7, 31, 12) }];
+    expect(daysSinceLastPoop(diapers, at(2026, 8, 3, 9))).toBe(3);
+  });
+
+  it('uses the most recent poop, ignoring order and pee-only entries', () => {
+    const diapers = [
+      { poop: false, time: at(2026, 8, 3, 8) },
+      { poop: true, time: at(2026, 7, 30, 8) },
+      { poop: true, time: at(2026, 8, 2, 8) },
+    ];
+    expect(daysSinceLastPoop(diapers, at(2026, 8, 3, 9))).toBe(1);
+  });
+
+  it('is unaffected by a daylight-saving shift in the span', () => {
+    // US DST starts 2026-03-08; the 8th is a 23-hour day.
+    const diapers = [{ poop: true, time: at(2026, 3, 7, 12) }];
+    expect(daysSinceLastPoop(diapers, at(2026, 3, 9, 12))).toBe(2);
   });
 });

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { loadItems, saveItems } from '../../../utils/storage';
-import { createDiaper, todayDiaperStats, msSinceLastPoop } from '../diaperLogic';
+import { createDiaper, todayDiaperStats, msSinceLastPoop, daysSinceLastPoop } from '../diaperLogic';
 
 export const DIAPERS_KEY = 'baby_tracker_diapers_v1';
 
@@ -40,6 +40,7 @@ export function useDiaperStore(now) {
     diapers,
     todayStats: todayDiaperStats(diapers, now),
     msSinceLastPoop: msSinceLastPoop(diapers, now),
+    daysSinceLastPoop: daysSinceLastPoop(diapers, now),
     logDiaper, updateDiaper, deleteDiaper, undoLast, replaceAll,
   };
 }

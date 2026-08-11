@@ -44,6 +44,18 @@ export function dailyDiaperTotals(diapers, now, days) {
   return rows;
 }
 
+// Calendar days, not elapsed time: a poop last night reads as "1 day ago",
+// which is how a parent counts it, whereas raw elapsed ms would say 0.
+export function daysSinceLastPoop(diapers, now) {
+  let latest = null;
+  for (const d of diapers) {
+    if (d.poop && (latest === null || d.time > latest)) latest = d.time;
+  }
+  if (latest === null) return null;
+  const diff = startOfDay(now) - startOfDay(latest);
+  return Math.max(0, Math.round(diff / 86400000));
+}
+
 export function msSinceLastPoop(diapers, now) {
   const last = diapers.find((d) => d.poop);
   if (!last) return null;
