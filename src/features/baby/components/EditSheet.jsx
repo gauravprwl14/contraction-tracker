@@ -5,6 +5,7 @@ import {
 import {
   DIAPER_COLORS, DIAPER_CONSISTENCIES, DIAPER_AMOUNTS,
 } from '../diaperLogic';
+import { MEDICINE_UNITS } from '../medicineLogic';
 import { Icon } from '../icons/Icon';
 
 const MILKS = ['expressed', 'formula'];
@@ -31,8 +32,18 @@ function OptionRow({ label, options, value, onChange, allowClear = false }) {
   );
 }
 
+const TITLES = {
+  feed: 'Edit feed',
+  diaper: 'Edit diaper',
+  growth: 'Edit measurement',
+  medicine: 'Edit medicine',
+};
+
 export function EditSheet({ kind, record, onSave, onDelete, onClose, notice }) {
   const isFeed = kind === 'feed';
+  const isDiaper = kind === 'diaper';
+  const isGrowth = kind === 'growth';
+  const isMedicine = kind === 'medicine';
   const baseTime = isFeed ? record.startTime : record.time;
 
   const [date, setDate] = useState(toDateInputValue(baseTime));
@@ -73,8 +84,38 @@ export function EditSheet({ kind, record, onSave, onDelete, onClose, notice }) {
     </label>
   );
 
+  // Growth values are decimal and individually optional, so a blank field must
+  // clear back to undefined rather than being coerced to 0.
+  const decimalField = (label, key, step) => (
+    <label className="field">
+      <span className="field__label">{label}</span>
+      <input
+        className="field__input"
+        type="number"
+        min="0"
+        step={step}
+        inputMode="decimal"
+        value={draft[key] ?? ''}
+        onChange={(e) => {
+          const raw = e.target.value;
+          const n = Number(raw);
+          set({ [key]: raw === '' || !Number.isFinite(n) || n <= 0 ? undefined : n });
+        }}
+      />
+    </label>
+  );
+
   const handleSave = () => {
     const startTime = fromDateTimeInputs(date, startClock);
+    if (isGrowth
+      && draft.weightKg == null && draft.heightCm == null && draft.headCm == null) {
+      setError('Enter at least one measurement.');
+      return;
+    }
+    if (isMedicine && !(draft.name ?? '').trim()) {
+      setError('Enter the medicine name.');
+      return;
+    }
     if (!isFeed) {
       onSave({ ...draft, time: startTime });
       onClose();
@@ -92,10 +133,10 @@ export function EditSheet({ kind, record, onSave, onDelete, onClose, notice }) {
   };
 
   return (
-    <div className="sheet" role="dialog" aria-label={isFeed ? 'Edit feed' : 'Edit diaper'}>
+    <div className="sheet" role="dialog" aria-label={TITLES[kind]}>
       <div className="sheet__head">
         <button className="sheet__close" onClick={onClose}>Cancel</button>
-        <span className="sheet__title">{isFeed ? 'Edit feed' : 'Edit diaper'}</span>
+        <span className="sheet__title">{TITLES[kind]}</span>
         <span />
       </div>
 
@@ -141,7 +182,36 @@ export function EditSheet({ kind, record, onSave, onDelete, onClose, notice }) {
           </>
         )}
 
-        {!isFeed && (
+        {isGrowth && (
+          <>
+            {decimalField('Weight (kg)', 'weightKg', '0.001')}
+            {decimalField('Height (cm)', 'heightCm', '0.1')}
+            {decimalField('Head circumference (cm)', 'headCm', '0.1')}
+          </>
+        )}
+
+        {isMedicine && (
+          <>
+            <label className="field">
+              <span className="field__label">Medicine</span>
+              <input
+                className="field__input"
+                type="text"
+                value={draft.name ?? ''}
+                onChange={(e) => set({ name: e.target.value })}
+              />
+            </label>
+            {decimalField('Amount', 'amount', '0.1')}
+            <OptionRow
+              label="Unit"
+              options={MEDICINE_UNITS}
+              value={draft.unit}
+              onChange={(unit) => set({ unit })}
+            />
+          </>
+        )}
+
+        {isDiaper && (
           <>
             <div className="field">
               <span className="field__label">Contents</span>

@@ -19,6 +19,8 @@ const PATHS = {
   chart: <><path d="M4.5 19.5h15" /><path d="M7.5 16V10" /><path d="M12 16V5.5" /><path d="M16.5 16v-4" /></>,
   list: <><path d="M4.5 7h15" /><path d="M4.5 12h15" /><path d="M4.5 17h15" /></>,
   home: <><path d="M4.5 10.5 12 4l7.5 6.5" /><path d="M6.5 9.8V19a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9.8" /></>,
+  growth: <><path d="M4.5 17.5 9.5 12l3.5 3.5L19.5 8" /><path d="M15.5 8h4v4" /></>,
+  medicine: <><path d="M14.2 4.3 4.3 14.2a4.9 4.9 0 0 0 7 7l9.9-9.9a4.9 4.9 0 0 0-7-7z" /><path d="M9 9l6 6" /></>,
 };
 
 export function Icon({ name, size = 20, className = '' }) {

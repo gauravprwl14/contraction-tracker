@@ -17,7 +17,21 @@ export function diaperSummary(d) {
   return d.poop ? 'Poop' : 'Pee';
 }
 
+export function growthSummary(m) {
+  const parts = [];
+  if (m.weightKg != null) parts.push(`${m.weightKg} kg`);
+  if (m.heightCm != null) parts.push(`${m.heightCm} cm`);
+  if (m.headCm != null) parts.push(`head ${m.headCm} cm`);
+  return parts.join(' · ');
+}
+
+export function medicineSummary(d) {
+  return d.amount != null ? `${d.name} · ${d.amount} ${d.unit}` : d.name;
+}
+
 export function entryIcon(kind, item) {
+  if (kind === 'growth') return 'growth';
+  if (kind === 'medicine') return 'medicine';
   if (kind === 'feed') return item.type === 'breast' ? 'breast' : 'bottle';
   return item.poop ? 'poop' : 'pee';
 }

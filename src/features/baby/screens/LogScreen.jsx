@@ -6,14 +6,17 @@ import { LogEntryRow } from '../log/LogEntryRow';
 import { Icon } from '../icons/Icon';
 
 export function LogScreen({
-  feedStore, diaperStore, now, onEdit,
-  onExportJson, onExportFeedsCsv, onExportDiapersCsv, onImport,
+  feedStore, diaperStore, growthStore, medicineStore, now, onEdit,
+  onExportJson, onExportFeedsCsv, onExportDiapersCsv,
+  onExportGrowthCsv, onExportMedicineCsv, onImport,
 }) {
   const state = useLogFilter();
 
   const all = [
     ...feedStore.feeds.map((f) => ({ kind: 'feed', time: f.startTime, item: f })),
     ...diaperStore.diapers.map((d) => ({ kind: 'diaper', time: d.time, item: d })),
+    ...growthStore.measurements.map((m) => ({ kind: 'growth', time: m.time, item: m })),
+    ...medicineStore.doses.map((d) => ({ kind: 'medicine', time: d.time, item: d })),
   ].sort((a, b) => b.time - a.time);
 
   const entries = applyFilters(all, state.filter, now);
@@ -27,6 +30,8 @@ export function LogScreen({
         </button>
         <button className="action--link" onClick={onExportFeedsCsv}>Feeds CSV</button>
         <button className="action--link" onClick={onExportDiapersCsv}>Diapers CSV</button>
+        <button className="action--link" onClick={onExportGrowthCsv}>Growth CSV</button>
+        <button className="action--link" onClick={onExportMedicineCsv}>Medicine CSV</button>
         <label className="action--link">
           <Icon name="upload" size={16} /> Import
           <input

@@ -6,7 +6,7 @@ import { Icon } from '../icons/Icon';
 
 export function HomeScreen({
   feedStore, diaperStore, armed, onStart, onPickSide, onCancelArm,
-  onLogDiaper, onEdit, onEditStale, onSaved,
+  onLogDiaper, onLogGrowth, onLogMedicine, onEdit, onEditStale, onSaved,
 }) {
   const { active, suggestion, lastFeed, msSinceLastFeed, todayStats } = feedStore;
   const diaperToday = diaperStore.todayStats;
@@ -82,6 +82,15 @@ export function HomeScreen({
         </button>
         <button className="action action--sm" onClick={() => onLogDiaper({ pee: true, poop: true })}>
           Both
+        </button>
+      </div>
+
+      <div className="actions actions--diaper">
+        <button className="action action--sm" onClick={onLogMedicine}>
+          <Icon name="medicine" size={18} /> Medicine
+        </button>
+        <button className="action action--sm" onClick={onLogGrowth}>
+          <Icon name="growth" size={18} /> Measure
         </button>
       </div>
 

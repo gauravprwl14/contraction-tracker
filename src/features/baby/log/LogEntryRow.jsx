@@ -1,10 +1,12 @@
 import { formatTime, formatMs } from '../../../utils/format';
 import { feedDurationMs } from '../feedLogic';
-import { entryIcon } from '../entrySummary';
+import { entryIcon, growthSummary, medicineSummary } from '../entrySummary';
 import { Icon } from '../icons/Icon';
 
 function primary(entry) {
   const { kind, item } = entry;
+  if (kind === 'growth') return 'Measurement';
+  if (kind === 'medicine') return medicineSummary(item);
   if (kind === 'diaper') return item.pee && item.poop ? 'Pee + poop' : item.poop ? 'Poop' : 'Pee';
   if (item.type === 'breast') return `Breast · ${formatMs(feedDurationMs(item))}`;
   return `Bottle · ${item.takenMl} ml`;
@@ -12,6 +14,8 @@ function primary(entry) {
 
 function secondary(entry) {
   const { kind, item } = entry;
+  if (kind === 'growth') return growthSummary(item);
+  if (kind === 'medicine') return '';
   if (kind === 'diaper') {
     return [item.color, item.consistency, item.amount].filter(Boolean).join(' · ');
   }
