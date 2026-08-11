@@ -17,7 +17,6 @@ const REF_LINES = [
 ];
 
 const INTENSITY_COLORS = ['var(--accent)', 'var(--accent)', 'var(--accent)', 'var(--amber)', 'var(--amber)', 'var(--stop)'];
-const INTENSITY_LABELS = ['Unrated','Unrated','Mild','Moderate','Strong','Intense'];
 
 function fmtShort(s) {
   if (s == null) return '';
@@ -27,7 +26,7 @@ function fmtShort(s) {
 }
 
 export function ContractionGraph({ contractions, intervals, isActive, elapsed }) {
-  const { bars, yGridLines, yMaxRounded, svgW, svgH, visibleIntervals, chronVisible } =
+  const { bars, yGridLines, yMaxRounded, svgW, svgH, visibleIntervals } =
     useMemo(() => {
       const MAX_BARS = 20;
       // chronological order oldest→newest
@@ -66,7 +65,7 @@ export function ContractionGraph({ contractions, intervals, isActive, elapsed })
       const intervalsChron = [...intervals].reverse();
       const visibleIntervals = intervalsChron.slice(-Math.max(0, chronVisible.length - 1));
 
-      return { bars, yGridLines, yMaxRounded, svgW, svgH, visibleIntervals, chronVisible };
+      return { bars, yGridLines, yMaxRounded, svgW, svgH, visibleIntervals };
     }, [contractions, intervals, isActive, elapsed]);
 
   if (contractions.length === 0) {
@@ -135,7 +134,7 @@ export function ContractionGraph({ contractions, intervals, isActive, elapsed })
           {/* ── Trend line connecting bar tops ── */}
           {bars.length >= 2 && (() => {
             const points = bars
-              .map(({ x, y, barH }) => `${x + BAR_W / 2},${y}`)
+              .map(({ x, y }) => `${x + BAR_W / 2},${y}`)
               .join(' ');
             return (
               <polyline

@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { useNow } from '../../../hooks/useNow';
 
 const STORAGE_KEY = 'contraction_tracker_data';
 
@@ -39,41 +40,18 @@ function detectLaborStage(avgInterval, avgDuration, count) {
 export function useContractionStore() {
   const [contractions, setContractions] = useState(() => loadFromStorage());
   const [activeStart, setActiveStart] = useState(null);
-  const [elapsed, setElapsed] = useState(0);
-  const [timeSinceLast, setTimeSinceLast] = useState(null);
-  const sessionStartRef = useRef(null);
+
+  // One clock drives every elapsed value below. They used to be state kept in
+  // step by their own intervals, which meant setState-inside-effect on every
+  // tick; deriving them from `now` keeps the same display with no extra state.
+  const isActive = activeStart !== null;
+  const now = useNow(isActive || contractions.length > 0);
 
   useEffect(() => {
     saveToStorage(contractions);
   }, [contractions]);
 
-  // Track session start (first contraction this session)
-  useEffect(() => {
-    if (contractions.length > 0 && sessionStartRef.current === null) {
-      const sorted = [...contractions].sort((a, b) => a.startTime - b.startTime);
-      sessionStartRef.current = sorted[0].startTime;
-    }
-    if (contractions.length === 0) sessionStartRef.current = null;
-  }, [contractions]);
-
-  useEffect(() => {
-    if (!activeStart) { setElapsed(0); return; }
-    const id = setInterval(() => setElapsed(Math.floor((Date.now() - activeStart) / 1000)), 500);
-    return () => clearInterval(id);
-  }, [activeStart]);
-
-  useEffect(() => {
-    if (activeStart || contractions.length === 0) { setTimeSinceLast(null); return; }
-    const update = () => setTimeSinceLast(Math.round((Date.now() - contractions[0].endTime) / 1000));
-    update();
-    const id = setInterval(update, 1000);
-    return () => clearInterval(id);
-  }, [activeStart, contractions]);
-
-  const startContraction = () => {
-    if (sessionStartRef.current === null) sessionStartRef.current = Date.now();
-    setActiveStart(Date.now());
-  };
+  const startContraction = () => setActiveStart(Date.now());
 
   // Immediately records the contraction with intensity: null, note: ''
   const stopContraction = () => {
@@ -89,7 +67,6 @@ export function useContractionStore() {
       note: '',
     };
     setActiveStart(null);
-    setElapsed(0);
     setContractions((prev) => [newContraction, ...prev]);
   };
 
@@ -103,14 +80,17 @@ export function useContractionStore() {
     setContractions((prev) => prev.filter((c) => c.id !== id));
   };
 
-  const reset = () => {
+  // Import replaces the whole log, so the session window is recomputed from
+  // the incoming records rather than kept from the data being discarded.
+  const replaceAll = (next) => {
     setActiveStart(null);
-    setElapsed(0);
-    setContractions([]);
-    sessionStartRef.current = null;
+    setContractions([...next].sort((a, b) => b.startTime - a.startTime));
   };
 
-  const isActive = activeStart !== null;
+  const reset = () => {
+    setActiveStart(null);
+    setContractions([]);
+  };
 
   // --- Derived stats ---
   const durations = contractions.map((c) => c.duration); // newest first
@@ -148,11 +128,21 @@ export function useContractionStore() {
     return Math.round((contractions.length / hours) * 10) / 10;
   })();
 
-  const sessionDuration = (() => {
-    if (contractions.length === 0 && !isActive) return null;
-    const start = sessionStartRef.current || (activeStart ?? Date.now());
-    return Math.round((Date.now() - start) / 1000);
-  })();
+  const elapsed = isActive ? Math.max(0, Math.floor((now - activeStart) / 1000)) : 0;
+
+  const timeSinceLast = !isActive && contractions.length > 0
+    ? Math.max(0, Math.round((now - contractions[0].endTime) / 1000))
+    : null;
+
+  // The session opens at the earliest contraction on record, so deleting or
+  // importing entries re-derives the window instead of stranding a stale start.
+  const sessionStart = contractions.length > 0
+    ? contractions.reduce((min, c) => Math.min(min, c.startTime), Infinity)
+    : activeStart;
+
+  const sessionDuration = sessionStart == null
+    ? null
+    : Math.max(0, Math.round((now - sessionStart) / 1000));
 
   const is511 =
     avgInterval != null && avgDuration != null &&
@@ -178,6 +168,7 @@ export function useContractionStore() {
     stopContraction,
     updateContraction,
     deleteContraction,
+    replaceAll,
     reset,
   };
 }
