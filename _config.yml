@@ -1,0 +1,16 @@
+# GitHub Pages builds this repo with Jekyll. Only the README is meant to be
+# published — everything below is app source or planning docs, and the plans
+# contain JSX like `style={{ ... }}` that Liquid tries (and fails) to parse.
+exclude:
+  - docs/
+  - index.html
+  - src/
+  - dist/
+  - public/
+  - node_modules/
+  - .superpowers/
+  - eslint.config.js
+  - vite.config.js
+  - vitest.config.js
+  - package.json
+  - package-lock.json
