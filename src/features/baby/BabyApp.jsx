@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNow } from './hooks/useNow';
+import { useNow } from '../../hooks/useNow';
 import { useFeedStore } from './hooks/useFeedStore';
 import { useDiaperStore } from './hooks/useDiaperStore';
 import { HomeScreen } from './screens/HomeScreen';

@@ -1,4 +1,5 @@
 import { formatDate, formatTime } from '../../utils/format';
+import { toCsv, download } from '../../utils/csv';
 import { feedDurationMs } from './feedLogic';
 
 export function buildBackup(feeds, diapers, presets) {
@@ -21,14 +22,6 @@ export function parseBackup(text) {
     presets: Array.isArray(parsed.presets) ? parsed.presets : [],
   };
 }
-
-const cell = (v) => {
-  const s = v == null ? '' : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-};
-
-const toCsv = (header, rows) =>
-  [header, ...rows].map((r) => r.map(cell).join(',')).join('\n');
 
 export function feedsToCsv(feeds) {
   const header = [
@@ -62,11 +55,4 @@ export function diapersToCsv(diapers) {
   return toCsv(header, rows);
 }
 
-export function download(filename, text, mime) {
-  const url = URL.createObjectURL(new Blob([text], { type: mime }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+export { download };
